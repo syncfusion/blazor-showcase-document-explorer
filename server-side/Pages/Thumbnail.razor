@@ -1,0 +1,69 @@
+﻿@*@page "/thumbnail"*@
+
+@using DocumentExplorer.Models
+
+<div class="e-pv-sidebar-content" id="pdfViewer_sideBarContent" tabindex="0" aria-label="Thumbnail View Panel" style="top:52px;">
+    <div class="e-pv-thumbnail-view e-pv-thumbnail-row" id="pdfViewer_thumbnail_view" style="display: flex;">
+        @foreach (var item in ThumbnailImages)
+        {
+            <a tabindex="-1" role="link">
+                <div class="e-pv-thumbnail e-pv-thumbnail-column">
+                    <div class="e-de-thumbnail-selection @UpdateSelectionClass(item.PageNumber)" @onclick="@(()=>Select(item.PageNumber))">                        
+                        <img class="e-pv-thumbnail-image" src="@item.Src">
+                    </div>
+                    <div class="e-pv-thumbnail-number" style="font-size: 12px;padding-left:0px;padding-right:0px;text-align: center;">@item.PageNumber</div>
+                </div>
+            </a>
+        }
+    </div>
+</div>
+
+@code{
+    private List<ThumbnailImage> ThumbnailImages { get; set; }
+    private int _previousImageIndex = 1;
+    private int _selectedPage = 1;
+    public bool ShowThumbnail { get; set; } = true;
+    protected override void OnInitialized()
+    {
+        ThumbnailImages = new List<ThumbnailImage>();
+    }
+    private string UpdateSelectionClass(int pageNumber)
+    {
+        if (pageNumber == _selectedPage)
+        {
+            return "e-de-thumbnail-active-selection";
+        }
+        else
+        {
+            return "";
+        }
+    }
+    public void RenderThumbnail(string[] images)
+    {
+        ThumbnailImages = new List<ThumbnailImage>();
+        for (int i = 1; i <= images.Length; i++)
+        {
+            ThumbnailImages.Add(new ThumbnailImage(i, images[(i - 1)]));
+        }
+        StateHasChanged();
+    }
+    public void GotoPage(int pageNumber)
+    {
+        _previousImageIndex = pageNumber;
+        _selectedPage = pageNumber;
+    }
+    private async void Select(int pageNumber)
+    {
+        _selectedPage = pageNumber;
+        _previousImageIndex = pageNumber;
+        StateHasChanged();
+        await GotoSelectedThumbnailPage.InvokeAsync(pageNumber);
+    }
+    public void SelectFirstPage()
+    {
+        _selectedPage = 1;
+        StateHasChanged();
+    }
+    [Parameter]
+    public EventCallback<int> GotoSelectedThumbnailPage { get; set; }
+}

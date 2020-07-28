@@ -1,0 +1,222 @@
+@page "/word-viewer"
+
+@using Syncfusion.Blazor.DocumentEditor
+
+<div class="zip-container" id="zipContainer">
+    <div class="loading_indicator @OverlayStyle">
+        <div class="e-de-spinner-pane">
+        </div>
+        <div class="e-de-loading-text">@DocumentName</div>
+        <div class="e-de-spinner-inner">
+            <svg class="e-de-spin-bootstrap4" viewBox="0 0 36 36">
+                <path class="e-de-path-circle" d="M18,1.8A16.2,16.2 0 1 1 1.8,18"></path>
+            </svg>
+        </div>
+    </div>
+    <div class="toolbar">
+        <TopToolbar @ref="_topToolbar" BackClick="BackClickHandler"></TopToolbar>
+    </div>
+    <div class="file-viewer" @onmousemove="@ToogleBottomToolBarVisibility">
+        <div id="LeftLayout" class="@ThumbnailStyle">
+            <Thumbnail @ref="_thumbnail" GotoSelectedThumbnailPage="GotoSlectedPage"></Thumbnail>
+        </div>
+        <div id="RightLayout" class="@DeMarginStyle">
+            <SfDocumentEditor @ref="_documenteditor" ID="DocEdit" PageOutline="#dee2e6" EnablePrint="true" Height="@Deheight" ZoomFactor="@ZoomFactor">
+                <DocumentEditorEvents Created="AfterCreated" ViewChanged="ViewChange" ZoomFactorChanged="ZoomChange"></DocumentEditorEvents>
+            </SfDocumentEditor>
+            <BottomToolbar @ref="_bottomToolbar" ShowHidePane="ShowHideThumbnail" ToolBarAction="FileToolBar" GotoPage="GotoAction"></BottomToolbar>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string OverlayStyle { get; set; } = "overlayShow";
+    private string DocumentName { get; set; }
+    private string PreviewPath { get; set; }
+    private string FileName { get; set; }
+    private string SubPath { get; set; }
+    private string Path { get; set; }
+    private string Deheight { get; set; } = "height:300px;";
+    private string ThumbnailStyle { get; set; } = "thumbnailShow";
+    private string DeMarginStyle { get; set; } = "e-word-right-layout";
+    private double ZoomFactor { get; set; } = 1;
+    private SfDocumentEditor _documenteditor;
+    private TopToolbar _topToolbar;
+    private BottomToolbar _bottomToolbar;
+    private Thumbnail _thumbnail;
+    protected override async void OnInitialized()
+    {
+        Deheight = await JSRuntime.InvokeAsync<string>("getDocumentEditorHeight");
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("path", out var pathparam))
+        {
+            Path = pathparam.First();
+        }
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("preview", out var param))
+        {
+            FileName = param.First();
+            DocumentName = "File is loading...";
+            PreviewPath = Path + FileName;
+        }
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("subpath", out var subPathparam))
+        {
+            SubPath = subPathparam.First();
+        }
+    }
+
+    private async void ToogleBottomToolBarVisibility()
+    {
+        await JSRuntime.InvokeVoidAsync("toggleBottomToolbarVisibility", "DocEdit_viewerContainer");
+    }
+
+    #region TopToolBar Interaction
+    private void BackClickHandler()
+    {
+        if (SubPath != null)
+        {
+            string file = IO.Path.GetFileName(PreviewPath);
+            Dictionary<string, string> query = new Dictionary<string, string> { { "preview", file }, { "path", PreviewPath.Replace((file), "") } };
+            NavigationManager.NavigateTo(QueryHelpers.AddQueryString(NavigationManager.BaseUri + "zip-viewer/", query));
+        }
+        else
+        {
+            Dictionary<string, string> query = new Dictionary<string, string> { { "preview", FileName }, { "path", Path } };
+            NavigationManager.NavigateTo(QueryHelpers.AddQueryString(NavigationManager.BaseUri, query));
+        }
+    }
+    #endregion
+
+    #region BottomToolbar
+    private async void ShowHideThumbnail()
+    {
+        OverlayStyle = "overlayShow";
+        UpdateThumbnailView();
+        await _documenteditor.Resize();
+        ToogleBottomToolBarVisibility();
+        OverlayStyle = "overlayHide";
+        StateHasChanged();
+    }
+    private void UpdateThumbnailView()
+    {
+        _thumbnail.ShowThumbnail = !_thumbnail.ShowThumbnail;
+        if (_thumbnail.ShowThumbnail)
+        {
+            ThumbnailStyle = "thumbnailShow";
+            DeMarginStyle = "e-word-right-layout";
+        }
+        else
+        {
+            ThumbnailStyle = "thumbnailHide";
+            DeMarginStyle = "e-word-layout";
+        }
+        StateHasChanged();
+    }
+    private async void GotoAction(int pageNum)
+    {
+        _thumbnail.GotoPage(pageNum);
+        await _documenteditor.ScrollToPage(pageNum);
+    }
+    private async void FileToolBar(string action)
+    {
+        switch (action)
+        {
+            case "ZoomIn":
+                ZoomFactor += 0.1;
+                break;
+            case "ZoomOut":
+                ZoomFactor -= 0.1;
+                break;
+            case "FullScreen":
+                await JSRuntime.InvokeVoidAsync("fullScreen", "DocEdit");
+                break;
+            case "Print":
+                await _documenteditor.Print();
+                break;
+        }
+    }
+    #endregion
+
+    #region Thumbnailpane Interaction
+    private void GotoSlectedPage(int args)
+    {
+        _documenteditor.ScrollToPage(args);
+        _bottomToolbar.CurrentPageNumber = args;
+    }
+    #endregion
+
+    #region DocumentEditor Event
+    private async void AfterCreated()
+    {
+        await _documenteditor.Resize();
+        HttpResponseMessage docresponse;
+        if (SubPath != null)
+        {
+            _topToolbar.RootName = IO.Path.GetFileName(SubPath);
+            string rooturl = NavigationManager.BaseUri + "api/ZipViewer/Root";
+            string docpath = "";
+            HttpResponseMessage rootresponse = await Http.GetAsync(rooturl);
+            string root = await rootresponse.Content.ReadAsStringAsync();
+            if (rootresponse.IsSuccessStatusCode)
+            {
+                docpath = (root + SubPath);
+            }
+            HttpRequestMessage docrequest = new HttpRequestMessage(HttpMethod.Post, NavigationManager.BaseUri + "api/DocumentEditor/OpenFromZip");
+            docrequest.Content = new StringContent(JsonConvert.SerializeObject(new { Path = docpath }), Encoding.UTF8, "application/json");
+            docresponse = await Http.SendAsync(docrequest);
+        }
+        else
+        {
+            _topToolbar.RootName = IO.Path.GetFileName(PreviewPath);
+            HttpRequestMessage docrequest = new HttpRequestMessage(HttpMethod.Post, NavigationManager.BaseUri + "api/DocumentEditor/Import");
+            docrequest.Content = new StringContent(JsonConvert.SerializeObject(new { Path = PreviewPath }), Encoding.UTF8, "application/json");
+            docresponse = await Http.SendAsync(docrequest);
+        }
+        string output = await docresponse.Content.ReadAsStringAsync();
+        if (docresponse.IsSuccessStatusCode)
+        {
+            List<string> images = new List<string>();
+            Newtonsoft.Json.Linq.JArray jArray = (Newtonsoft.Json.Linq.JArray)JsonConvert.DeserializeObject(output);
+            string sfdt = ((JValue)jArray[0]).Value.ToString();
+            jArray.RemoveAt(0);
+            foreach (JValue item in jArray)
+            {
+                images.Add(item.Value.ToString());
+            }
+            _thumbnail.RenderThumbnail(images.ToArray());
+            await _documenteditor.Open(sfdt);
+        }
+        await _documenteditor.Resize();
+        _thumbnail.SelectFirstPage();
+        _bottomToolbar.TotalPages = await _documenteditor.GetPageCount();
+        _bottomToolbar.Refresh();
+        DocumentName = "";
+        OverlayStyle = "overlayHide";
+        StateHasChanged();
+    }
+    private void ViewChange(ViewChangeEventArgs args)
+    {
+        int pageNo = (int)args.StartPage;
+        _bottomToolbar.CurrentPageNumber = pageNo;
+        _thumbnail.GotoPage((int)args.StartPage);
+        if (pageNo == _bottomToolbar.TotalPages)
+        {
+            _bottomToolbar.NextPageDisable = true;
+            _bottomToolbar.PreviousPageDisable = false;
+        }
+        if (pageNo < _bottomToolbar.TotalPages && pageNo != 1)
+        {
+            _bottomToolbar.NextPageDisable = false;
+            _bottomToolbar.PreviousPageDisable = false;
+        }
+        if (pageNo == 1)
+        {
+            _bottomToolbar.PreviousPageDisable = true;
+            _bottomToolbar.NextPageDisable = false;
+        }
+    }
+    private void ZoomChange()
+    {
+        _bottomToolbar.ZoomOutDisable = (_documenteditor.ZoomFactor <= 0.5);
+        _bottomToolbar.ZoomInDisable = (_documenteditor.ZoomFactor >= 5);
+    }
+    #endregion
+}
