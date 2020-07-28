@@ -1,0 +1,199 @@
+@page "/presentation-viewer"
+
+@using Syncfusion.Blazor.PdfViewerServer
+@using Syncfusion.Blazor.PdfViewer
+
+<div class="zip-container" id="zipContainer">
+    <div class="loading_indicator @OverlayStyle">
+        <div class="e-de-spinner-pane">
+        </div>
+        <div class="e-de-loading-text">@DocumentName</div>
+        <div class="e-de-spinner-inner">
+            <svg class="e-de-spin-bootstrap4" viewBox="0 0 36 36">
+                <path class="e-de-path-circle" d="M18,1.8A16.2,16.2 0 1 1 1.8,18"></path>
+            </svg>
+        </div>
+    </div>
+    <div class="toolbar">
+        <TopToolbar @ref="_topToolbar" BackClick="BackClickHandler"></TopToolbar>
+    </div>
+    <div class="file-viewer" @onmousemove="@ToogleBottomToolBarVisibility">
+        <SfPdfViewerServer @ref="_viewer" ID="PptView" EnableToolbar="false" Height="100%" EnableBookmarkPanel="false" ZoomMode="ZoomMode.FitToPage" ZoomValue="@Zoom">
+            <PdfViewerEvents DocumentLoaded="@OnDocumentLoaded" PageChanged="@OnPageChanged">
+            </PdfViewerEvents>
+        </SfPdfViewerServer>
+        <BottomToolbar @ref="_bottomToolbar" ShowHidePane="ShowHideThumbnail" ToolBarAction="FileToolBar" GotoPage="Goto"></BottomToolbar>
+    </div>
+</div>
+
+@code {
+    private string OverlayStyle { get; set; } = "overlayShow";
+    private string DocumentName { get; set; }
+    private string PreviewPath { get; set; }
+    private string FileName { get; set; }
+    private string SubPath { get; set; }
+    private string Path { get; set; }
+    private int Zoom { get; set; }
+    private bool _isThumbnailVisible = true;
+    private SfPdfViewerServer _viewer;
+    private TopToolbar _topToolbar;
+    private BottomToolbar _bottomToolbar;
+
+    protected override void OnInitialized()
+    {
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("path", out var pathparam))
+        {
+            Path = pathparam.First();
+        }
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("preview", out var param))
+        {
+            FileName = param.First();
+            DocumentName = "File is loading...";
+            PreviewPath = Path + FileName;
+        }
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("subpath", out var subPathparam))
+        {
+            SubPath = subPathparam.First();
+        }
+    }
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            string targetPath = null;
+            string rootName = null;
+            if (SubPath != null)
+            {
+                rootName = IO.Path.GetFileName(SubPath);
+                string rooturl = NavigationManager.BaseUri + "api/ZipViewer/Root";
+                HttpResponseMessage rootresponse = await Http.GetAsync(rooturl);
+                string root = await rootresponse.Content.ReadAsStringAsync();
+                if (rootresponse.IsSuccessStatusCode)
+                {
+                    targetPath = (root + SubPath);
+                }
+            }
+            else
+            {
+                rootName = IO.Path.GetFileName(PreviewPath);
+            }
+            _topToolbar.RootName = rootName;
+            HttpRequestMessage docrequest = new HttpRequestMessage(HttpMethod.Post, NavigationManager.BaseUri + "api/Presentation/ConvertToPDF");
+            docrequest.Content = new StringContent(JsonConvert.SerializeObject(new { Path = PreviewPath, TargetPath = targetPath }), Encoding.UTF8, "application/json");
+            HttpResponseMessage docresponse = await Http.SendAsync(docrequest);
+            string output = await docresponse.Content.ReadAsStringAsync();
+            if (docresponse.IsSuccessStatusCode)
+            {
+                Newtonsoft.Json.Linq.JArray jArray = (Newtonsoft.Json.Linq.JArray)JsonConvert.DeserializeObject(output);
+                string sfdt = ((JValue)jArray[0]).Value.ToString();
+                await _viewer.Load(sfdt, null);
+            }
+        }
+    }
+
+    protected async void OnDocumentLoaded(LoadEventArgs args)
+    {
+        await _viewer.OpenThumbnailPane();
+        _bottomToolbar.TotalPages = await _viewer.GetPageCount();
+        DocumentName = "";
+        OverlayStyle = "overlayHide";
+        StateHasChanged();
+    }
+
+    private void BackClickHandler()
+    {
+        if (_viewer != null)
+        {
+            _viewer.Unload();
+        }
+        if (SubPath != null)
+        {
+            string file = IO.Path.GetFileName(PreviewPath);
+            Dictionary<string, string> query = new Dictionary<string, string> { { "preview", file }, { "path", PreviewPath.Replace((file), "") } };
+            NavigationManager.NavigateTo(QueryHelpers.AddQueryString(NavigationManager.BaseUri + "zip-viewer/", query));
+        }
+        else
+        {
+            Dictionary<string, string> query = new Dictionary<string, string> { { "preview", FileName }, { "path", Path } };
+            NavigationManager.NavigateTo(QueryHelpers.AddQueryString(NavigationManager.BaseUri, query));
+        }
+    }
+
+    private async void ToogleBottomToolBarVisibility()
+    {
+        await JSRuntime.InvokeVoidAsync("toggleBottomToolbarVisibility", "PptView", _isThumbnailVisible);
+    }
+
+    private async void ShowHideThumbnail(bool args)
+    {
+        await _viewer.OpenThumbnailPane();
+        _isThumbnailVisible = !_isThumbnailVisible;
+        ToogleBottomToolBarVisibility();
+    }
+
+    private async void Goto(int args)
+    {
+        await _viewer.GoToPage(args);
+    }
+
+    private async void FileToolBar(string action)
+    {
+        switch (action)
+        {
+            case "PreviousPage":
+                await _viewer.GoToPreviousPage();
+                break;
+            case "NextPage":
+                await _viewer.GoToNextPage();
+                break;
+            case "ZoomIn":
+                await _viewer.ZoomIn();
+                Zoom = await _viewer.GetZoomPercentage();
+                if (_viewer.ZoomValue >= 400)
+                {
+                    _bottomToolbar.ZoomInDisable = true;
+                }
+                _bottomToolbar.ZoomOutDisable = false;
+                StateHasChanged();
+                break;
+            case "ZoomOut":
+                await _viewer.ZoomOut();
+                Zoom = await _viewer.GetZoomPercentage();
+                if (_viewer.ZoomValue <= 10)
+                {
+                    _bottomToolbar.ZoomOutDisable = true;
+                }
+                _bottomToolbar.ZoomInDisable = false;
+                StateHasChanged();
+                break;
+            case "FullScreen":
+                await JSRuntime.InvokeVoidAsync("fullScreen", "PptView_pageViewContainer");
+                break;
+            case "Print":
+                await _viewer.Print();
+                break;
+        }
+    }
+
+    private void OnPageChanged(PageChangeEventArgs args)
+    {
+        _bottomToolbar.CurrentPageNumber = (int)args.CurrentPageNumber;
+        if (args.CurrentPageNumber == _bottomToolbar.TotalPages)
+        {
+            _bottomToolbar.NextPageDisable = true;
+            _bottomToolbar.PreviousPageDisable = false;
+        }
+        if (args.CurrentPageNumber < _bottomToolbar.TotalPages && args.CurrentPageNumber != 1)
+        {
+            _bottomToolbar.NextPageDisable = false;
+            _bottomToolbar.PreviousPageDisable = false;
+        }
+        if (args.CurrentPageNumber == 1)
+        {
+            _bottomToolbar.PreviousPageDisable = true;
+            _bottomToolbar.NextPageDisable = false;
+        }
+        StateHasChanged();
+    }
+}

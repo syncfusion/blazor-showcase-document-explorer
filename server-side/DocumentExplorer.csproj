@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>DocumentExplorer</RootNamespace>
+    <Configurations>Debug;Release;Publish</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Publish|AnyCPU'">
+    <DefineConstants>TRACE;Publish</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Syncfusion.Blazor" Version="18.2.0.44" />
+    <PackageReference Include="Syncfusion.Blazor.PdfViewerServer.Windows" Version="18.2.0.44" />
+    <PackageReference Include="Syncfusion.Blazor.WordProcessor" Version="18.2.0.44" />
+    <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="18.2.0.44" />
+    <PackageReference Include="Syncfusion.Licensing" Version="18.2.0.44" />
+    <PackageReference Include="Syncfusion.PresentationRenderer.Net.Core" Version="18.2.0.44" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0-preview9.19424.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="web.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="SyncfusionLicense.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

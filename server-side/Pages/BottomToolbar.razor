@@ -1,0 +1,154 @@
+﻿@*@page "/bottomToolbar"*@
+
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Inputs
+
+<div id="bottom_toolbar_container" class="bootom-tlbr-holder" style="display:none">
+    <SfToolbar Height="50px" CssClass="e-file-view-bottom-toolbar">
+        <ToolbarItems>
+            @*Show/Hide Thumbnail pane*@
+            <ToolbarItem TooltipText="Show or hide pages" Align="@ItemAlign.Left" OnClick="ToolbarClick" Id="ShowHidePages">
+                <Template>
+                    <span class="e-padding-toolbar-item e-icons e-bottom-toolbar-show-hide e-bottom-tool-item"></span>
+                </Template>
+            </ToolbarItem>
+            @* Previous Page *@
+            <ToolbarItem TooltipText="Previous page" Disabled="@PreviousPageDisable" CssClass="disable-item" Align="@ItemAlign.Left" OnClick="ToolbarClick" Id="PreviousPage">
+                <Template>
+                    <span class="e-padding-toolbar-item e-icons e-bottom-toolbar-previous e-bottom-tool-item"></span>
+                </Template>
+            </ToolbarItem>
+            @* Current Page Number *@
+            <ToolbarItem TooltipText="Current page number" Align="@ItemAlign.Left" Id="CurrentPageNumberItem" Type="ItemType.Input">
+                <Template>
+                    <SfNumericTextBox Max="@TotalPages" CssClass="e-current-page-num" Width="50px" TValue="int" Format="###.##" Value="@CurrentPageNumber" ShowSpinButton=false>
+                        <NumericTextBoxEvents TValue="int" ValueChange="Goto"></NumericTextBoxEvents>
+                    </SfNumericTextBox>
+                </Template>
+            </ToolbarItem>
+            @* Total Page Number *@
+            <ToolbarItem TooltipText="Total pages" Align="@ItemAlign.Left" Id="total-pges">
+                <Template>
+                    <span class="e-padding-toolbar-item e-bottom-toolbar-total-pages">of @TotalPages</span>
+                </Template>
+
+            </ToolbarItem>
+            @* Next Page *@
+            <ToolbarItem TooltipText="Next page" Disabled="@NextPageDisable" CssClass="disable-item" Align="@ItemAlign.Left" OnClick="ToolbarClick" Id="NextPage">
+                <Template>
+                    <span class="e-padding-toolbar-item e-icons e-bottom-toolbar-next e-bottom-tool-item"></span>
+                </Template>
+            </ToolbarItem>
+            @* Zoom in *@
+            <ToolbarItem TooltipText="Zoom in" Disabled="@ZoomInDisable" CssClass="disable-item" Align="@ItemAlign.Left" OnClick="ToolbarClick" Id="ZoomIn">
+                <Template>
+                    <span class="e-padding-toolbar-item e-icons e-bottom-toolbar-zoom-in e-bottom-tool-item"></span>
+                </Template>
+            </ToolbarItem>
+            @* Zoom out *@
+            <ToolbarItem TooltipText="Zoom out" Disabled="@ZoomOutDisable" CssClass="disable-item" Align="@ItemAlign.Left" OnClick="ToolbarClick" Id="ZoomOut">
+                <Template>
+                    <span class="e-padding-toolbar-item e-icons e-bottom-toolbar-zoom-out e-bottom-tool-item"></span>
+                </Template>
+            </ToolbarItem>
+            @* Full Screen *@
+            <ToolbarItem TooltipText="Full screen" Align="@ItemAlign.Left" OnClick="ToolbarClick" Id="FullScreen">
+                <Template>
+                    <span class="e-padding-toolbar-item e-icons e-bottom-toolbar-full-screen e-bottom-tool-item"></span>
+                </Template>
+            </ToolbarItem>
+            @* Print *@
+            <ToolbarItem TooltipText="Print" Align="@ItemAlign.Left" OnClick="ToolbarClick" Id="Print">
+                <Template>
+                    <span class="e-padding-toolbar-item e-icons sf-icon-Print e-bottom-tool-item"></span>
+                </Template>
+            </ToolbarItem>
+        </ToolbarItems>
+    </SfToolbar>
+</div>
+
+
+
+@code{
+    public int TotalPages { get; set; } = 0;
+    private bool NxtShowIcon { get; set; }
+    private bool PrevShowIcon { get; set; }
+    public int CurrentPageNumber { get; set; } = 1;
+    private string PrevItemDisable { get; set; } = "";
+    private string NxtItemDisable { get; set; } = "";
+    private string PreviousPageID { get; set; } = "";    
+    public bool ZoomInDisable { get; set; }
+    public bool ZoomOutDisable { get; set; }
+    public bool PreviousPageDisable { get; set; } = true;
+    public bool NextPageDisable { get; set; }
+
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
+
+    public async void Goto(Syncfusion.Blazor.Inputs.ChangeEventArgs<int> args)
+    {
+        if (args.IsInteracted)
+        {
+            int page;
+            int.TryParse(args.Value.ToString(), out page);
+            await GotoPage.InvokeAsync(page);
+        }
+    }
+
+    private async void ToolbarClick(ClickEventArgs args)
+    {
+        switch (args.Item.Id)
+        {
+            case "ShowHidePages":
+                await ShowHidePane.InvokeAsync(true);
+                break;
+            case "PreviousPage":
+                if (CurrentPageNumber > 1)
+                {
+                    PreviousPageDisable = false;
+                    NextPageDisable = false;
+                    CurrentPageNumber--;
+                    await GotoPage.InvokeAsync(CurrentPageNumber);
+                    if (CurrentPageNumber == 1)
+                    {
+                        PreviousPageDisable = true;
+                    }
+                }
+                break;
+            case "NextPage":
+                if (CurrentPageNumber < TotalPages)
+                {
+                    NextPageDisable = false;
+                    PreviousPageDisable = false;
+                    CurrentPageNumber++;
+                    await GotoPage.InvokeAsync(CurrentPageNumber);
+                    if (CurrentPageNumber == TotalPages)
+                    {
+                        NextPageDisable = true;
+                    }
+                }
+                break;
+            case "ZoomIn":
+                await ToolBarAction.InvokeAsync("ZoomIn");
+                break;
+            case "ZoomOut":
+                await ToolBarAction.InvokeAsync("ZoomOut");
+                break;
+            case "FullScreen":
+                await ToolBarAction.InvokeAsync("FullScreen");
+                break;
+            case "Print":
+                await ToolBarAction.InvokeAsync("Print");
+                break;
+        }
+    }
+
+    [Parameter]
+    public EventCallback<bool> ShowHidePane { get; set; }
+    [Parameter]
+    public EventCallback<int> GotoPage { get; set; }
+    [Parameter]
+    public EventCallback<string> ToolBarAction { get; set; }
+}
