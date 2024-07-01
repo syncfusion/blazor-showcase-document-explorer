@@ -1,0 +1,109 @@
+@page "/word-viewer"
+
+@using Syncfusion.Blazor.DocumentEditor
+
+<div class="zip-container" id="zipContainer">
+    <div class="loading_indicator @OverlayStyle">
+        <div class="e-de-spinner-pane">
+        </div>
+        <div class="e-de-loading-text">@DocumentName</div>
+        <div class="e-de-spinner-inner">
+            <svg class="e-de-spin-bootstrap4" viewBox="0 0 36 36">
+                <path class="e-de-path-circle" d="M18,1.8A16.2,16.2 0 1 1 1.8,18"></path>
+            </svg>
+        </div>
+    </div>
+    <div class="toolbar">
+        <TopToolbar @ref="_topToolbar" BackClick="BackClickHandler"></TopToolbar>
+    </div>
+    <div class="file-viewer">
+        <div id="RightLayout">
+            <SfDocumentEditorContainer @ref="_documenteditorcontainer" ID="DocEdit" Height="540px" Width="100%">
+                <DocumentEditorContainerEvents Created="AfterCreated"></DocumentEditorContainerEvents>
+            </SfDocumentEditorContainer>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string OverlayStyle { get; set; } = "overlayShow";
+    private string DocumentName { get; set; }
+    private string PreviewPath { get; set; }
+    private string FileName { get; set; }
+    private string SubPath { get; set; }
+    private string Path { get; set; }
+    private string ThumbnailStyle { get; set; } = "thumbnailShow";
+    private double ZoomFactor { get; set; } = 1;
+    private SfDocumentEditorContainer _documenteditorcontainer;
+    private TopToolbar _topToolbar;
+    protected override async void OnInitialized()
+    {
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("path", out var pathparam))
+        {
+            Path = pathparam.First();
+        }
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("preview", out var param))
+        {
+            FileName = param.First();
+            DocumentName = "File is loading...";
+            PreviewPath = Path + FileName;
+        }
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("subpath", out var subPathparam))
+        {
+            SubPath = subPathparam.First();
+        }
+    }
+
+    #region TopToolBar Interaction
+    private void BackClickHandler()
+    {
+        if (SubPath != null)
+        {
+            string file = IO.Path.GetFileName(PreviewPath);
+            Dictionary<string, string> query = new Dictionary<string, string> { { "preview", file }, { "path", PreviewPath.Replace((file), "") } };
+            NavigationManager.NavigateTo(QueryHelpers.AddQueryString(NavigationManager.BaseUri + "zip-viewer/", query));
+        }
+        else
+        {
+            Dictionary<string, string> query = new Dictionary<string, string> { { "preview", FileName }, { "path", Path } };
+            NavigationManager.NavigateTo(QueryHelpers.AddQueryString(NavigationManager.BaseUri, query));
+        }
+    }
+    #endregion
+
+    #region DocumentEditor Event
+    private async void AfterCreated()
+    {
+        await _documenteditorcontainer.ResizeAsync();
+        HttpResponseMessage docresponse;
+        if (SubPath != null)
+        {
+            _topToolbar.RootName = IO.Path.GetFileName(SubPath);
+            string rooturl = NavigationManager.BaseUri + "api/ZipViewer/Root";
+            string docpath = "";
+            HttpResponseMessage rootresponse = await Http.GetAsync(rooturl);
+            string root = await rootresponse.Content.ReadAsStringAsync();
+            if (rootresponse.IsSuccessStatusCode)
+            {
+                docpath = (root + SubPath);
+            }
+            HttpRequestMessage docrequest = new HttpRequestMessage(HttpMethod.Post, NavigationManager.BaseUri + "api/DocumentEditor/OpenFromZip");
+            docrequest.Content = new StringContent(JsonConvert.SerializeObject(new { Path = docpath }), Encoding.UTF8, "application/json");
+            docresponse = await Http.SendAsync(docrequest);
+        }
+        else
+        {
+            _topToolbar.RootName = IO.Path.GetFileName(PreviewPath);
+            HttpRequestMessage docrequest = new HttpRequestMessage(HttpMethod.Post, NavigationManager.BaseUri + "api/DocumentEditor/Import");
+            docrequest.Content = new StringContent(JsonConvert.SerializeObject(new { Path = PreviewPath }), Encoding.UTF8, "application/json");
+            docresponse = await Http.SendAsync(docrequest);
+        }
+        string output = await docresponse.Content.ReadAsStringAsync();
+        await _documenteditorcontainer.DocumentEditor.OpenAsync(output);
+        await _documenteditorcontainer.ResizeAsync();
+        DocumentName = "";
+        OverlayStyle = "overlayHide";
+        StateHasChanged();
+    }
+    #endregion
+}
