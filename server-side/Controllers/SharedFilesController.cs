@@ -22,6 +22,7 @@ using Syncfusion.PresentationRenderer;
 using System.Drawing;
 using Microsoft.AspNetCore.Cors;
 using DocumentExplorer.Models;
+using SkiaSharp;
 
 namespace DocumentExplorer.Controllers
 {
@@ -42,6 +43,10 @@ namespace DocumentExplorer.Controllers
         [Route("FileOperations")]
         public object FileOperations([FromBody] FileManagerFilterContent args)
         {
+            if (args.Path == "/Files/")
+            {
+                args.Path = "/";
+            }
             switch (args.Action)
             {
                 // Add your custom action here
@@ -106,9 +111,20 @@ namespace DocumentExplorer.Controllers
                     //Loads the PDF document 
                     pdfExportImage.Load(fileStream);
                     //Exports the PDF document pages into images
-                    Bitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, 0);
+                    SkiaSharp.SKBitmap[] skBitmaps = pdfExportImage.ExportAsImage(0, 0);
+                    System.Drawing.Bitmap[] bitmapImages = new System.Drawing.Bitmap[skBitmaps.Length];
+
+                    for (int i = 0; i < skBitmaps.Length; i++)
+                    {
+                        using (SKImage skImage = SKImage.FromBitmap(skBitmaps[i]))
+                        using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
+                        using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
+                        {
+                            bitmapImages[i] = new System.Drawing.Bitmap(stream);
+                        }
+                    }
                     imageStream = new MemoryStream();
-                    bitmapimage[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
+                    bitmapImages[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
                     imageStream.Position = 0;
                     pdfExportImage.Dispose();
                     fileStream.Close();
@@ -137,9 +153,20 @@ namespace DocumentExplorer.Controllers
                     //Loads the PDF document 
                     pdfExportImage.Load(outputStream);
                     //Exports the PDF document pages into images
-                    Bitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, 0);
+                    SkiaSharp.SKBitmap[] skBitmaps = pdfExportImage.ExportAsImage(0, 0);
+                    System.Drawing.Bitmap[] bitmapImages = new System.Drawing.Bitmap[skBitmaps.Length];
+
+                    for (int i = 0; i < skBitmaps.Length; i++)
+                    {
+                        using (SKImage skImage = SKImage.FromBitmap(skBitmaps[i]))
+                        using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
+                        using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
+                        {
+                            bitmapImages[i] = new System.Drawing.Bitmap(stream);
+                        }
+                    }
                     imageStream = new MemoryStream();
-                    bitmapimage[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
+                    bitmapImages[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
                     imageStream.Position = 0;
 
                     fileStream.Close();

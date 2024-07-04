@@ -35,65 +35,6 @@ window.revertToIconPreview = (val, iconClass) => {
     image.parentElement.insertBefore(iconDiv, image);
     image.remove();
 };
-window.setDialogDrag = (val) => {
-    var dialog = document.getElementById(val).ej2_instances[0];
-    dialog.allowDragging = false;
-}
-window.showStar = (val, isGrid) => {
-    var element = document.querySelector("[data-starid='" + val + "']");
-    if ((element === null) || (element.querySelector('.star') !== null)) { return; }
-    var rowDiv = document.createElement('span');
-    rowDiv.className += 'star sf-icon-Starred';
-    if (isGrid) {
-        element.querySelector('.e-fe-text').appendChild(rowDiv);
-    }
-    else {
-        if (!element.querySelector('.e-list-icon')) {
-            rowDiv.className += ' img';
-            element.querySelector('.e-text-content').prepend(rowDiv);
-        }
-        else {
-            element.querySelector('.e-list-icon').appendChild(rowDiv);
-        }
-    }
-};
-
-window.toggleStar = (val, isGrid) => {
-    var element = document.querySelector("[data-mapId='" + val + "']");
-    if ((element === null)) { return "Not Found"; }
-    var rowDiv = document.createElement('span');
-    rowDiv.className += 'star sf-icon-Starred';
-    if (isGrid) {
-        var containerEle = ej.base.closest(element, '.e-row');
-        if (containerEle.querySelector('.star') === null) {
-            containerEle.querySelector('.e-fe-text').appendChild(rowDiv);
-            ej.base.addClass([containerEle], ['e-file-star']);
-            return "Add";
-        } else {
-            ej.base.removeClass([containerEle], ['e-file-star']);
-            ej.base.remove(containerEle.querySelector('.star'));
-            return "Remove";
-        }
-    }
-    else {
-        var containerEle = ej.base.closest(element, '.e-large-icon');
-        if (containerEle.querySelector('.star') === null) {
-            if (!containerEle.querySelector('.e-list-icon')) {
-                rowDiv.className += ' img';
-                containerEle.querySelector('.e-text-content').prepend(rowDiv);
-            }
-            else {
-                containerEle.querySelector('.e-list-icon').appendChild(rowDiv);
-            }
-            ej.base.addClass([containerEle], ['e-file-star']);
-            return "Add";
-        } else {
-            ej.base.removeClass([containerEle], ['e-file-star']);
-            ej.base.remove(containerEle.querySelector('.star'));
-            return "Remove";
-        }
-    }
-};
 window.toggleZipFileManagerVisibility = (id, val) => {
     var element = document.getElementById(id);
     if (val) {

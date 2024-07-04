@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using DocumentExplorer.Models.FileManager;
 using Syncfusion.Pdf;
 using Syncfusion.Presentation;
-using Syncfusion.PresentationToPdfConverter;
+using Syncfusion.PresentationRenderer;
 
 namespace DocumentExplorer.Controllers
 {

@@ -234,8 +234,8 @@ app {
     color: white;
     position: absolute !important;
     text-align: center !important;
-    top: 44% !important;
-    left: 47%;
+    top: 55% !important;
+    left: 46%;
     z-index: 1002;
 }
 .e-de-spinner-inner {
@@ -906,10 +906,6 @@ html, body, .zip-container {
     display: none;
 }
 
-.e-pv-sidebar-toolbar {
-    display: none !important;
-}
-
 .thumbnailShow {
     display: none;
 }
@@ -964,10 +960,6 @@ html, body, .zip-container {
 
 .e-pv-sidebar-toolbar-splitter.e-left {
     left: 0;
-}
-
-.e-pv-sidebar-toolbar {
-    display: none !important;
 }
 
 .thumbnailShow {

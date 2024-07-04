@@ -12,13 +12,15 @@ using Syncfusion.DocIORenderer;
 using Syncfusion.Pdf;
 using Syncfusion.Blazor.PdfViewer;
 using DocumentExplorer.Models;
+using SkiaSharp;
+using System.Text.Json;
 
 namespace DocumentExplorer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class DocumentEditorController : ControllerBase
-    {   
+    {
         private string basePath;
         private string baseLocation;
         IWebHostEnvironment _hostingEnvironment;
@@ -30,19 +32,16 @@ namespace DocumentExplorer.Controllers
         }
 
         [Route("Import")]
-        public string[] Import([FromBody] FileManagerDirectoryContent args)
+        public string Import([FromBody] FileManagerDirectoryContent args)
         {
             string fileLocation = this.baseLocation + args.Path.Replace("/", "\\");
-            List<string> returnArray = new List<string>();
             using (FileStream fs = new FileStream(fileLocation, FileMode.Open, FileAccess.Read))
             {
                 WordDocument document = WordDocument.Load(fs, GetImportFormatType(Path.GetExtension(fileLocation).ToLower()));
-                string json = Newtonsoft.Json.JsonConvert.SerializeObject(document);
+                string json = JsonSerializer.Serialize(document);            
                 document.Dispose();
-                returnArray.Add(json);
-                return ConvertToImages(fs, returnArray, GetDocIOFormatType(Path.GetExtension(args.Path).ToLower())).ToArray();
-            }            
-
+                return json;
+            }
         }
         private List<string> ConvertToImages(FileStream fs, List<string> returnStrings, Syncfusion.DocIO.FormatType type)
         {
@@ -66,8 +65,20 @@ namespace DocumentExplorer.Controllers
             pdfExportImage.Load(outputStream);
 
             //Exports the PDF document pages into images
-            Bitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, pdfExportImage.PageCount-1);
-            foreach (Bitmap bitmap in bitmapimage)
+            SKBitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, pdfExportImage.PageCount - 1);
+            Bitmap[] bitmapImages = new Bitmap[bitmapimage.Length];
+
+            for (int i = 0; i < bitmapimage.Length; i++)
+            {
+                using (SKImage skImage = SKImage.FromBitmap(bitmapimage[i]))
+                using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
+                using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
+                {
+                    bitmapImages[i] = new Bitmap(stream);
+                }
+            }
+
+            foreach (Bitmap bitmap in bitmapImages)
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
@@ -91,7 +102,7 @@ namespace DocumentExplorer.Controllers
             }
 
         }
-               
+
         private ImportFormatType GetImportFormatType(string format)
         {
             if (string.IsNullOrEmpty(format))

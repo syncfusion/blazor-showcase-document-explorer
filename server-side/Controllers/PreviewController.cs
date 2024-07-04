@@ -15,6 +15,8 @@ using Syncfusion.Blazor.PdfViewer;
 using Syncfusion.Presentation;
 using Syncfusion.PresentationRenderer;
 using DocumentExplorer.Models;
+using SkiaSharp;
+using Microsoft.AspNetCore.Http;
 
 namespace DocumentExplorer.Controllers
 {
@@ -28,13 +30,21 @@ namespace DocumentExplorer.Controllers
         {
             basePath = hostingEnvironment.ContentRootPath;
             operation = new PhysicalFileProvider();
-            operation.RootFolder(this.basePath + "\\wwwroot\\Files"); // Data\\Files denotes in which files and folders are available.
+            operation.RootFolder(this.basePath + "\\wwwroot\\VirtualConnections\\"); // Data\\Files denotes in which files and folders are available.
         }
 
         [Route("GetPreview")]
         public string GetPreview([FromBody] FileManagerDirectoryContent args)
         {
-            string baseFolder = this.basePath + "\\wwwroot\\Files";
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
+            string baseFolder = this.basePath + "\\wwwroot\\VirtualConnections\\" + connectionId + "\\Files";
+            this.operation.RootFolder(baseFolder);
             try
             {
                 String fullPath = baseFolder + args.Path;
@@ -49,9 +59,20 @@ namespace DocumentExplorer.Controllers
                         //Loads the PDF document 
                         pdfExportImage.Load(fileStream);
                         //Exports the PDF document pages into images
-                        Bitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, 0);
-                        imageStream = new MemoryStream();
-                        bitmapimage[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
+                       SkiaSharp.SKBitmap[] skBitmaps = pdfExportImage.ExportAsImage(0, 0);
+                    System.Drawing.Bitmap[] bitmapImages = new System.Drawing.Bitmap[skBitmaps.Length];
+
+                    for (int i = 0; i < skBitmaps.Length; i++)
+                    {
+                        using (SKImage skImage = SKImage.FromBitmap(skBitmaps[i]))
+                        using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
+                        using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
+                        {
+                            bitmapImages[i] = new System.Drawing.Bitmap(stream);
+                        }
+                    }
+                    imageStream = new MemoryStream();
+                    bitmapImages[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
                         imageStream.Position = 0;
                         pdfExportImage.Dispose();
                         fileStream.Close();
@@ -87,9 +108,21 @@ namespace DocumentExplorer.Controllers
                         //Loads the PDF document 
                         pdfExportImage.Load(outputStream);
                         //Exports the PDF document pages into images
-                        Bitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, 0);
+                        SKBitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, 0);
+                        Bitmap[] bitmapImages = new Bitmap[bitmapimage.Length];
+
+                        for (int i = 0; i < bitmapimage.Length; i++)
+                        {
+                            using (SKImage skImage = SKImage.FromBitmap(bitmapimage[i]))
+                            using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
+                            using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
+                            {
+                                bitmapImages[i] = new Bitmap(stream);
+                            }
+                        }
+
                         imageStream = new MemoryStream();
-                        bitmapimage[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
+                        bitmapImages[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
                         imageStream.Position = 0;
 
                         fileStream.Close();

@@ -617,13 +617,21 @@ namespace DocumentExplorer.Data
 
         // Moves file(s) or folder(s).
         public virtual FileManagerResponse Move(string path, string targetPath, string[] names, string[] renameFiles, FileManagerDirectoryContent targetData, params FileManagerDirectoryContent[] data)
-        { 
+        {
             FileManagerResponse moveResponse = new FileManagerResponse();
             try
             {
+                string validatePath;
+                validatePath = Path.Combine(contentRootPath + path);
+                if (Path.GetFullPath(validatePath) != GetFilePath(validatePath))
+                {
+                    throw new UnauthorizedAccessException("Access denied for Directory-traversal");
+                }
                 string result = String.Empty;
                 if (renameFiles == null)
+                {
                     renameFiles = new string[0];
+                }
                 string physicalPath = GetPath(path);
                 for (int i = 0; i < names.Length; i++)
                 {
@@ -641,6 +649,7 @@ namespace DocumentExplorer.Data
                     accessMessage = PathPermission.Message;
                     throw new UnauthorizedAccessException("'" + this.getFileNameFromPath(this.rootName + targetPath) + "' is not accessible. You need permission to perform the writeContents action.");
                 }
+
                 List<string> existFiles = new List<string>();
                 List<string> missingFiles = new List<string>();
                 List<FileManagerDirectoryContent> movedFiles = new List<FileManagerDirectoryContent>();
@@ -654,20 +663,38 @@ namespace DocumentExplorer.Data
                         path = tempPath + names[i].Substring(0, name + 1);
                         names[i] = names[i].Substring(name + 1);
                     }
-                    else path = tempPath;
+                    else
+                    {
+                        path = tempPath;
+                    }
                     string itemPath = Path.Combine(contentRootPath + path, names[i]);
+                    if (Path.GetFullPath(itemPath) != GetFilePath(itemPath) + names[i])
+                    {
+                        throw new UnauthorizedAccessException("Access denied for Directory-traversal");
+                    }
                     if (Directory.Exists(itemPath) || File.Exists(itemPath))
                     {
                         if ((File.GetAttributes(itemPath) & FileAttributes.Directory) == FileAttributes.Directory)
                         {
                             string directoryName = names[i];
                             string oldPath = Path.Combine(contentRootPath + path, directoryName);
+                            if (Path.GetFullPath(oldPath) != GetFilePath(oldPath) + directoryName)
+                            {
+                                throw new UnauthorizedAccessException("Access denied for Directory-traversal");
+                            }
                             string newPath = Path.Combine(contentRootPath + targetPath, directoryName);
+                            if (Path.GetFullPath(newPath) != GetFilePath(newPath) + directoryName)
+                            {
+                                throw new UnauthorizedAccessException("Access denied for Directory-traversal");
+                            }
                             bool exist = Directory.Exists(newPath);
                             if (exist)
                             {
                                 int index = -1;
-                                if (renameFiles.Length > 0) index = Array.FindIndex(renameFiles, row => row.Contains(directoryName));
+                                if (renameFiles.Length > 0)
+                                {
+                                    index = Array.FindIndex(renameFiles, row => row.Contains(directoryName));
+                                }
                                 if ((newPath == oldPath) || (index != -1))
                                 {
                                     newPath = DirectoryRename(newPath);
@@ -683,7 +710,10 @@ namespace DocumentExplorer.Data
                                     detail.PreviousName = names[i];
                                     movedFiles.Add(detail);
                                 }
-                                else existFiles.Add(fullName);
+                                else
+                                {
+                                    existFiles.Add(fullName);
+                                }
                             }
                             else
                             {
@@ -694,7 +724,6 @@ namespace DocumentExplorer.Data
                                 {
                                     result = DeleteDirectory(oldPath);
                                     if (result != String.Empty) { break; }
-
                                 }
                                 FileManagerDirectoryContent detail = GetFileDetails(newPath);
                                 detail.PreviousName = names[i];
@@ -705,7 +734,15 @@ namespace DocumentExplorer.Data
                         {
                             string fileName = names[i];
                             string oldPath = Path.Combine(contentRootPath + path, fileName);
+                            if (Path.GetFullPath(oldPath) != GetFilePath(oldPath) + fileName)
+                            {
+                                throw new UnauthorizedAccessException("Access denied for Directory-traversal");
+                            }
                             string newPath = Path.Combine(contentRootPath + targetPath, fileName);
+                            if (Path.GetFullPath(newPath) != GetFilePath(newPath) + fileName)
+                            {
+                                throw new UnauthorizedAccessException("Access denied for Directory-traversal");
+                            }
                             bool fileExist = File.Exists(newPath);
                             try
                             {
@@ -714,24 +751,35 @@ namespace DocumentExplorer.Data
                                 {
                                     int index = -1;
                                     if (renameFiles.Length > 0)
+                                    {
                                         index = Array.FindIndex(renameFiles, row => row.Contains(fileName));
+                                    }
                                     if ((newPath == oldPath) || (index != -1))
                                     {
                                         newPath = FileRename(newPath, fileName);
                                         File.Copy(oldPath, newPath);
                                         bool isExist = File.Exists(oldPath);
-                                        if (isExist) File.Delete(oldPath);
+                                        if (isExist)
+                                        {
+                                            File.Delete(oldPath);
+                                        }
                                         FileManagerDirectoryContent detail = GetFileDetails(newPath);
                                         detail.PreviousName = names[i];
                                         movedFiles.Add(detail);
                                     }
-                                    else existFiles.Add(fullName);
+                                    else
+                                    {
+                                        existFiles.Add(fullName);
+                                    }
                                 }
                                 else
                                 {
                                     File.Copy(oldPath, newPath);
                                     bool isExist = File.Exists(oldPath);
-                                    if (isExist) File.Delete(oldPath);
+                                    if (isExist)
+                                    {
+                                        File.Delete(oldPath);
+                                    }
                                     FileManagerDirectoryContent detail = GetFileDetails(newPath);
                                     detail.PreviousName = names[i];
                                     movedFiles.Add(detail);
@@ -742,13 +790,20 @@ namespace DocumentExplorer.Data
                             {
                                 if (e.GetType().Name == "UnauthorizedAccessException")
                                 {
-                                    result = newPath; break;
+                                    result = newPath;
+                                    break;
                                 }
-                                else throw e;
+                                else
+                                {
+                                    throw e;
+                                }
                             }
                         }
                     }
-                    else missingFiles.Add(names[i]);
+                    else
+                    {
+                        missingFiles.Add(names[i]);
+                    }
                 }
                 moveResponse.Files = movedFiles;
                 if (result != String.Empty)
@@ -768,11 +823,17 @@ namespace DocumentExplorer.Data
                     er.Message = "File Already Exists";
                     moveResponse.Error = er;
                 }
-                if (missingFiles.Count == 0) return moveResponse;
+                if (missingFiles.Count == 0)
+                {
+                    return moveResponse;
+                }
                 else
                 {
                     string namelist = missingFiles[0];
-                    for (int k = 1; k < missingFiles.Count; k++) { namelist = namelist + ", " + missingFiles[k]; }
+                    for (int k = 1; k < missingFiles.Count; k++)
+                    {
+                        namelist = namelist + ", " + missingFiles[k];
+                    }
                     throw new FileNotFoundException(namelist + " not found in given location.");
                 }
             }
@@ -783,7 +844,7 @@ namespace DocumentExplorer.Data
                     Message = e.Message.ToString(),
                     Code = e.Message.ToString().Contains("is not accessible. You need permission") ? "401" : "417",
                     FileExists = moveResponse.Error?.FileExists
-                }; 
+                };
                 if ((er.Code == "401") && !string.IsNullOrEmpty(accessMessage)) { er.Message = accessMessage; }
                 moveResponse.Error = er;
                 return moveResponse;
@@ -908,7 +969,7 @@ namespace DocumentExplorer.Data
         }
 
         // Uploads the file(s) to the files system.
-        public virtual FileManagerResponse Upload(string path, IList<IFormFile> uploadFiles, string action, params FileManagerDirectoryContent[] data)
+        public virtual FileManagerResponse Upload(string path, IList<IFormFile> uploadFiles, string action,string basePath, params FileManagerDirectoryContent[] data)
         {
             FileManagerResponse uploadResponse = new FileManagerResponse();
             try
@@ -925,7 +986,7 @@ namespace DocumentExplorer.Data
                     if (uploadFiles != null)
                     {
                         string name = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
-                        string fullName = Path.Combine((this.contentRootPath + path), name);
+                        string fullName = Path.Combine((basePath + "\\Files\\"), name);
                         if (action == "save")
                         {
                             if (!System.IO.File.Exists(fullName))

@@ -11,22 +11,20 @@
         <TopToolbar @ref="_topToolbar" BackClick="BackClickHandler"></TopToolbar>
     </div>
     <div class="file-viewer">
-        <SfFileManager @ref="_zipManager" CssClass="e-zip" View="ViewType.Details" Path="@ViewerPath" RootAliasName="@RootName" Height="100%" AllowMultiSelection="false">
+        <SfFileManager @ref="_zipManager" TValue="FileManagerDirectoryContent" CssClass="e-zip" View="ViewType.Details" Path="@ViewerPath" RootAliasName="@RootName" Height="100%" AllowMultiSelection="false">
             <FileManagerAjaxSettings Url=@(NavigationManager.BaseUri + "api/ZipViewer/FileOperations")
                                      GetImageUrl=@(NavigationManager.BaseUri + "api/ZipViewer/GetImage")>
             </FileManagerAjaxSettings>
             <FileManagerNavigationPaneSettings Visible="false"></FileManagerNavigationPaneSettings>
-            <FileManagerEvents Created="AfterCreated" OnSend="BeforeSend" OnFileOpen="FileOpen"></FileManagerEvents>
+            <FileManagerEvents Created="AfterCreated" TValue="FileManagerDirectoryContent" OnSend="BeforeSend" OnFileOpen="@FileOpen"></FileManagerEvents>
             <FileManagerToolbarSettings Visible="false"></FileManagerToolbarSettings>
             <FileManagerContextMenuSettings Visible="false"></FileManagerContextMenuSettings>
-            <FileManagerDetailsViewSettings ColumnResizing="false">
-                <FileManagerColumns>
-                    @*Default column for file name*@
-                    <FileManagerColumn Field="name" HeaderText="Name" Width="120" Template="<span class='e-fe-text'>${name}</span>" HeaderTextAlign=TextAlign.Left TextAlign=TextAlign.Left CustomAttributes="@(new { @class = "e-fe-grid-name" } )"></FileManagerColumn>
-                    @*Default column for file size*@
+            @*<FileManagerDetailsViewSettings ColumnResizing=false>
+                <FileManagerColumns>                    
+                    <FileManagerColumn Field="name" HeaderText="Name" Width="120" Template="<span class='e-fe-text'>${name}</span>" HeaderTextAlign=TextAlign.Left TextAlign=TextAlign.Left CustomAttributes="@(new { @class = "e-fe-grid-name" } )"></FileManagerColumn>                    
                     <FileManagerColumn Field="size" HeaderText="Size" Width="auto" Template="<span class='e-fe-size'>${size}</span>" HeaderTextAlign=TextAlign.Left TextAlign=TextAlign.Left></FileManagerColumn>
                 </FileManagerColumns>
-            </FileManagerDetailsViewSettings>
+            </FileManagerDetailsViewSettings>*@
         </SfFileManager>
     </div>
 </div>
@@ -40,7 +38,7 @@
     private string SubPath { get; set; }
     private string Path { get; set; }
     public string OverlayStyle { get; set; } = "overlayHide";
-    private SfFileManager _zipManager;
+private SfFileManager<FileManagerDirectoryContent> _zipManager;
     private TopToolbar _topToolbar;
     private string SpinnerTarget { get; set; } = "#zipContainer";
     public bool isRootNameChange = true;
@@ -76,7 +74,7 @@
         HttpResponseMessage response = await Http.SendAsync(request);
         if (response.IsSuccessStatusCode)
         {
-            _zipManager.Refresh();
+            await _zipManager.RefreshFilesAsync();
         }
     }
     private void BackClickHandler()
@@ -106,10 +104,10 @@
             string modifiedDataString = JsonConvert.SerializeObject(data);
             AjaxSettings["data"] = modifiedDataString;
             string returnString = JsonConvert.SerializeObject(AjaxSettings);
-            args.AjaxSettings = JsonConvert.DeserializeObject<object>(returnString);
+            //args.AjaxSettings = JsonConvert.DeserializeObject<object>(returnString);
         }
     }
-    private void FileOpen(FileOpenEventArgs args)
+    private void FileOpen(Syncfusion.Blazor.FileManager.FileOpenEventArgs<FileManagerDirectoryContent?> args)
     {
         string dataString = JsonConvert.SerializeObject(args.FileDetails);
         Dictionary<string, dynamic> fileDetails = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(dataString);

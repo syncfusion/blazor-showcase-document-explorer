@@ -22,50 +22,114 @@ namespace DocumentExplorer.Controllers
     {
         private PhysicalFileProvider operation;
         private string basePath;
+        string root = "wwwroot\\Files";
+        string rootPath;
+        string virtualConnection;
         public FileManagerController(IWebHostEnvironment hostingEnvironment)
         {
             this.basePath = hostingEnvironment.ContentRootPath;
             this.operation = new PhysicalFileProvider();
-            this.operation.RootFolder(this.basePath + "\\wwwroot\\Files"); // Data\\Files denotes in which files and folders are available.
+            if (basePath.EndsWith("\\"))
+                this.rootPath = this.basePath + this.root;
+            else
+                this.rootPath = this.basePath + "\\" + this.root;
+            this.operation.RootFolder(rootPath);
         }
         // Processing the File Manager operations
         [Route("FileOperations")]
         public object FileOperations([FromBody] FileManagerCustomContent args)
         {
+
+            args.RootType = HttpContext.Request.Headers["RootType"];
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+            if (args.Path == "/Files/")
+            {
+                args.Path = "/";
+            }
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
+
+            if (basePath.EndsWith("\\"))
+            {
+                virtualConnection = this.basePath + "wwwroot\\VirtualConnections";
+            }
+            else
+            {
+                virtualConnection = this.basePath + "\\wwwroot\\VirtualConnections";
+            }
+            DateTime currentTime = DateTime.Now;
+            DateTime deletionThreshold = currentTime.AddHours(-24);
+            DirectoryInfo virtualDirectoryInfo = new DirectoryInfo(virtualConnection);
+
+            if (Directory.Exists(virtualConnection) && virtualDirectoryInfo.LastWriteTime <= deletionThreshold)
+            {
+                Directory.Delete(virtualConnection, true);
+            }
+            if (!Directory.Exists(virtualConnection))
+            {
+                //Create virtual  root directory
+                Directory.CreateDirectory(virtualConnection);
+            }
+            string userID = virtualConnection + "\\" + connectionId + "\\Files";
+            string virtualUser = virtualConnection + "\\" + connectionId + "\\User";
+            string virtualTrash = virtualConnection + "\\" + connectionId + "\\Trash";
+            if (!Directory.Exists(userID))
+            {
+                Directory.CreateDirectory(userID);
+                Directory.CreateDirectory(virtualUser);
+                Directory.CreateDirectory(virtualTrash);
+                CopyFolder(rootPath, userID);
+                CopyFolder(this.basePath + "\\wwwroot\\User", virtualUser);
+                CopyFolder(this.basePath + "\\wwwroot\\Trash", virtualTrash);
+            }
+
+            //Set user directory as root
+            this.operation.RootFolder(userID);
+
+            if (args.Action == "delete" || args.Action == "rename")
+            {
+                if ((args.TargetPath == null) && (args.Path == ""))
+                {
+                    FileManagerResponse response = new FileManagerResponse();
+                    response.Error = new ErrorDetails { Code = "401", Message = "Restricted to modify the root folder." };
+                    return this.operation.ToCamelCase(response);
+                }
+            }
+
             switch (args.Action)
             {
                 // Add your custom action here
                 case "read":
-                    if ((args.RootType != null) && ((args.RootType == "Recent") /*|| (args.RootType == "Starred")*/))
+                    if ((args.RootType != null) && ((args.RootType == "Recent")))
                     {
                         FileManagerResponse result1 = this.operation.Search(args.Path, "*", args.ShowHiddenItems, false);
-                        result1 = FilterRecentFiles(result1);
-                        return AddStarDetails(result1);
-                    }
-                    else if ((args.RootType != null) && (args.RootType == "Starred"))
-                    {
-                        return FilterStarred(this.operation.Search(args.Path, "*", args.ShowHiddenItems, false));
+                        return FilterRecentFiles(result1);
                     }
                     else
                     {
-                        return AddStarDetails(this.operation.GetFiles(args.Path, args.ShowHiddenItems));
+                        return this.operation.ToCamelCase(this.operation.GetFiles(args.Path, args.ShowHiddenItems));
                     }
                 case "delete":
+
+#if Publish
+                    FileManagerResponse deleteResponse = new FileManagerResponse();
+                    deleteResponse.Error = new ErrorDetails() { Code = "401", Message = "Restricted to perform this action" };
+                    return this.operation.ToCamelCase(deleteResponse);
+#else
                     FileManagerDirectoryContent[] items1 = args.Data;
                     string[] names1 = args.Names;
-                    for (var i = 0; i < items1.Length; i++)
-                    {
-                        names1[i] = ((items1[i].FilterPath + items1[i].Name).Substring(1));
-                        RemoveStarred(names1[i]);
-                    }
-                    return this.operation.ToCamelCase(MoveToTrash(args.Data));
+                    return this.operation.ToCamelCase(MoveToTrash(args.Data, connectionId, virtualConnection, virtualUser));
+#endif
                 case "copy":
                 case "move":
                     FileManagerResponse response = new FileManagerResponse();
                     response.Error = new ErrorDetails() { Code = "401", Message = "Restricted to perform this action" };
                     return this.operation.ToCamelCase(response);
                 case "details":
-                    if ((args.RootType != null) && ((args.RootType == "Recent") || (args.RootType == "Starred")))
+                    if ((args.RootType != null) && ((args.RootType == "Recent")))
                     {
                         FileManagerDirectoryContent[] items = args.Data;
                         string[] names = args.Names;
@@ -87,16 +151,11 @@ namespace DocumentExplorer.Controllers
                     if ((args.RootType != null) && ((args.RootType == "Recent")))
                     {
                         FileManagerResponse result1 = this.operation.Search(args.Path, args.SearchString, args.ShowHiddenItems, args.CaseSensitive);
-                        result1 = FilterRecentFiles(result1);
-                        return AddStarDetails(result1);
-                    }
-                    else if ((args.RootType != null) && (args.RootType == "Starred"))
-                    {
-                        return FilterStarred(this.operation.Search(args.Path, args.SearchString, args.ShowHiddenItems, args.CaseSensitive));
+                        return FilterRecentFiles(result1);
                     }
                     else
                     {
-                        return AddStarDetails(this.operation.Search(args.Path, args.SearchString, args.ShowHiddenItems, args.CaseSensitive));
+                        return this.operation.ToCamelCase(this.operation.Search(args.Path, args.SearchString, args.ShowHiddenItems, args.CaseSensitive));
                     }
                 case "rename":
                     // Path - Current path of the renamed file; Name - Old file name; NewName - New file name
@@ -121,13 +180,13 @@ namespace DocumentExplorer.Controllers
             result.Files = allFiles;
             return result;
         }
-        public FileManagerResponse MoveToTrash(FileManagerDirectoryContent[] dataArray)
+        public FileManagerResponse MoveToTrash(FileManagerDirectoryContent[] dataArray, string userId, String virtualConnection, string virtualUser)
         {
-            string jsonPath = this.basePath + "\\wwwroot\\User\\trash.json";
+            string jsonPath = virtualUser + "\\trash.json";
             string jsonData = System.IO.File.ReadAllText(jsonPath);
             List<TrashContents> DeletedFiles = JsonConvert.DeserializeObject<List<TrashContents>>(jsonData) ?? new List<TrashContents>();
             PhysicalFileProvider trashOperation = new PhysicalFileProvider();
-            string root = this.basePath + "\\wwwroot";
+            string root = virtualConnection + "\\" + userId;
             trashOperation.RootFolder(root);
             List<FileManagerDirectoryContent> deletedFiles = new List<FileManagerDirectoryContent>();
             foreach (FileManagerDirectoryContent data in dataArray)
@@ -158,59 +217,6 @@ namespace DocumentExplorer.Controllers
             System.IO.File.WriteAllText(jsonPath, jsonData);
             return new FileManagerResponse() { Files = deletedFiles };
         }
-        public string AddStarDetails(FileManagerResponse value)
-        {
-            string jsonPath = this.basePath + "\\wwwroot\\User\\star.json";
-            string jsonData = System.IO.File.ReadAllText(jsonPath);
-            List<string> starredFiles = JsonConvert.DeserializeObject<List<string>>(jsonData) ?? new List<string>();
-            FileResponse readResponse = new FileResponse();
-            readResponse.CWD = value.CWD;
-            readResponse.Files = JsonConvert.DeserializeObject<IEnumerable<FileManagerCustomContent>>(JsonConvert.SerializeObject(value.Files));
-            foreach (FileManagerCustomContent file in readResponse.Files)
-            {
-                file.FilterPath = file.FilterPath.Replace(Path.DirectorySeparatorChar, '/');
-                file.Starred = starredFiles.Contains(file.FilterPath + file.Name);
-            }
-            readResponse.Details = value.Details;
-            readResponse.Error = value.Error;
-            return JsonConvert.SerializeObject(readResponse, new JsonSerializerSettings { ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() } });
-        }
-        public string FilterStarred(FileManagerResponse value)
-        {
-            string jsonPath = this.basePath + "\\wwwroot\\User\\star.json";
-            string jsonData = System.IO.File.ReadAllText(jsonPath);
-            List<string> starredFiles = JsonConvert.DeserializeObject<List<string>>(jsonData) ?? new List<string>();
-            FileResponse readResponse = new FileResponse();
-            readResponse.CWD = value.CWD;
-            List<FileManagerCustomContent> files = new List<FileManagerCustomContent>();
-            List<FileManagerCustomContent> allFiles = JsonConvert.DeserializeObject<List<FileManagerCustomContent>>(JsonConvert.SerializeObject(value.Files));
-            foreach (FileManagerCustomContent file in allFiles)
-            {
-                file.FilterPath = file.FilterPath.Replace(Path.DirectorySeparatorChar, '/');
-                if (starredFiles.Contains(file.FilterPath + file.Name))
-                {
-                    file.Starred = true;
-                    files.Add(file);
-                }
-            }
-            readResponse.Files = files;
-            readResponse.Details = value.Details;
-            readResponse.Error = value.Error;
-            return JsonConvert.SerializeObject(readResponse, new JsonSerializerSettings { ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() } });
-        }
-        public void RemoveStarred(string filePath)
-        {
-            string jsonPath = this.basePath + "\\wwwroot\\User\\star.json";
-            string jsonData = System.IO.File.ReadAllText(jsonPath);
-            List<string> starredFiles = JsonConvert.DeserializeObject<List<string>>(jsonData) ?? new List<string>();
-            string path = filePath.Replace(Path.DirectorySeparatorChar, '/');
-            if (starredFiles.Contains(path))
-            {
-                starredFiles.Remove(path);
-            }
-            jsonData = JsonConvert.SerializeObject(starredFiles);
-            System.IO.File.WriteAllText(jsonPath, jsonData);
-        }
         [Route("Upload")]
         public IActionResult Upload(string path, IList<IFormFile> uploadFiles, string action)
         {
@@ -220,9 +226,21 @@ namespace DocumentExplorer.Controllers
             Response.ContentType = "application/json; charset=utf-8";
             Response.StatusCode = 403;
             Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = "The upload functionality is restricted in this online demo. To test this demo application with upload functionality, please download the source code from the GitHub location (https://github.com/syncfusion/blazor-showcase-document-explorer) and run it.";
+            return Content("The upload functionality is restricted in this online demo. To test this demo application with upload functionality, please download the source code from the GitHub location (https://github.com/syncfusion/blazor-showcase-document-explorer) and run it.");
 #else
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
             FileManagerResponse uploadResponse;
-            uploadResponse = operation.Upload(path, uploadFiles, action, null);
+            PhysicalFileProvider uploadOperation = new PhysicalFileProvider();
+            string basePath = this.basePath + "\\wwwroot\\VirtualConnections\\" + connectionId;
+            string userID = this.basePath + "wwwroot\\VirtualConnections\\" + connectionId + "\\Files";
+            uploadOperation.RootFolder(userID);
+            uploadResponse = operation.Upload(path, uploadFiles, action, basePath, null);
             if (uploadResponse.Error != null)
             {
                 Response.Clear();
@@ -230,8 +248,8 @@ namespace DocumentExplorer.Controllers
                 Response.StatusCode = Convert.ToInt32(uploadResponse.Error.Code);
                 Response.HttpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = uploadResponse.Error.Message;
             }
-#endif
             return Content("");
+#endif
         }
 
         [Route("Download")]
@@ -250,7 +268,15 @@ namespace DocumentExplorer.Controllers
         [Route("ToggleStarred")]
         public IActionResult ToggleStarred([FromBody] FileManagerCustomContent args)
         {
-            string jsonPath = this.basePath + "\\wwwroot\\User\\star.json";
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
+            string basePath = this.basePath + "\\wwwroot\\VirtualConnections\\" + connectionId +"\\User";
+            string jsonPath = basePath + "\\star.json";
             StreamReader reader = new StreamReader(jsonPath);
             string jsonData = reader.ReadToEnd();
             reader.Dispose();
@@ -273,6 +299,26 @@ namespace DocumentExplorer.Controllers
         public IActionResult GetImage(FileManagerDirectoryContent args)
         {
             return this.operation.GetImage(args.Path, args.Id, false, null, null);
+        }
+
+        private void CopyFolder(string source, string destination)
+        {
+            if (!Directory.Exists(destination))
+            {
+                Directory.CreateDirectory(destination);
+            }
+
+            foreach (var file in Directory.EnumerateFiles(source))
+            {
+                var dest = Path.Combine(destination, Path.GetFileName(file));
+                System.IO.File.Copy(file, dest);
+            }
+
+            foreach (var folder in Directory.EnumerateDirectories(source))
+            {
+                var dest = Path.Combine(destination, Path.GetFileName(folder));
+                CopyFolder(folder, dest);
+            }
         }
 
         public class FileManagerCustomContent : FileManagerDirectoryContent

@@ -22,11 +22,10 @@ namespace DocumentExplorer.Controllers
         private string basePath;
         private string baseLocation;
 
-
         public TrashController(IWebHostEnvironment hostingEnvironment)
         {
             this.basePath = hostingEnvironment.ContentRootPath;
-            this.baseLocation = this.basePath + "\\wwwroot";
+            this.baseLocation = this.basePath + "\\wwwroot\\VirtualConnections\\";
             this.operation = new PhysicalFileProvider();
         }
 
@@ -34,6 +33,10 @@ namespace DocumentExplorer.Controllers
         [Route("FileOperations")]
         public object FileOperations([FromBody] ReadArgs args)
         {
+            if (args.Path == "/Files/")
+            {
+                args.Path = "/";
+            }
             try
             {
                 switch (args.Action)
@@ -72,9 +75,16 @@ namespace DocumentExplorer.Controllers
 
         public FileManagerResponse GetFiles()
         {
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
             FileManagerResponse readResponse = new FileManagerResponse();
             FileManagerDirectoryContent cwd = new FileManagerDirectoryContent();
-            String fullPath = (this.baseLocation + "/Trash");
+            String fullPath = (this.baseLocation + connectionId + "/Trash");
             DirectoryInfo directory = new DirectoryInfo(fullPath);
             cwd.Name = "Trash";
             cwd.Size = 0;
@@ -86,7 +96,7 @@ namespace DocumentExplorer.Controllers
             cwd.FilterPath = "/";
             cwd.Permission = null;
             readResponse.CWD = cwd;
-            string jsonPath = this.basePath + "\\wwwroot\\User\\trash.json";
+            string jsonPath = this.basePath + "\\wwwroot\\VirtualConnections\\" + connectionId +"\\User\\trash.json";
             string jsonData = System.IO.File.ReadAllText(jsonPath);
             List<TrashContents> DeletedFiles = JsonConvert.DeserializeObject<List<TrashContents>>(jsonData) ?? new List<TrashContents>();
             List<FileManagerDirectoryContent> files = new List<FileManagerDirectoryContent>();
@@ -99,7 +109,14 @@ namespace DocumentExplorer.Controllers
         }
         public FileManagerResponse GetDetails(FileManagerDirectoryContent[] files)
         {
-            this.operation.RootFolder(this.baseLocation + "\\Trash");
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
+            this.operation.RootFolder(this.baseLocation + connectionId + "\\Trash");
             FileManagerResponse response;
             string[] names = new string[files.Length];
             string responseName = "";
@@ -117,8 +134,15 @@ namespace DocumentExplorer.Controllers
         }
         public FileManagerResponse DeleteFiles(FileManagerDirectoryContent[] files)
         {
-            this.operation.RootFolder(this.baseLocation);
-            string jsonPath = this.basePath + "\\wwwroot\\User\\trash.json";
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
+            this.operation.RootFolder(this.baseLocation + connectionId);
+            string jsonPath = this.basePath + "\\wwwroot\\VirtualConnections\\" + connectionId + "\\User\\trash.json";
             string jsonData = System.IO.File.ReadAllText(jsonPath);
             List<FileManagerDirectoryContent> responseFiles =new List<FileManagerDirectoryContent>();
             List<TrashContents> DeletedFiles = JsonConvert.DeserializeObject<List<TrashContents>>(jsonData) ?? new List<TrashContents>();
@@ -126,7 +150,7 @@ namespace DocumentExplorer.Controllers
             {
                 TrashContents trashFile = DeletedFiles.Find(x => (x.Container.Equals(file.Id)));
                 string trashPath = "/Trash/" + trashFile.Container;
-                    DeleteDirectory(this.baseLocation + trashPath);
+                    DeleteDirectory(this.baseLocation + connectionId + trashPath);
                 responseFiles.Add(trashFile.Data);
                     DeletedFiles.Remove(trashFile);
             }
@@ -137,9 +161,16 @@ namespace DocumentExplorer.Controllers
         [Route("EmptyTrash")]
         public IActionResult EmptyTrash()
         {
-            string jsonPath = this.basePath + "\\wwwroot\\User\\trash.json";
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
+            string jsonPath = this.basePath + "\\wwwroot\\VirtualConnections\\" + connectionId + "\\User\\trash.json";
             string jsonData ="";
-            string[] dirs = Directory.GetDirectories(this.baseLocation);
+            string[] dirs = Directory.GetDirectories(this.baseLocation + connectionId);
             foreach (string dir in dirs)
             {
                 DeleteDirectory(dir);
@@ -151,8 +182,15 @@ namespace DocumentExplorer.Controllers
         [Route("Restore")]
         public IActionResult Restore([FromBody] FileManagerDirectoryContent[] files)
         {
-            this.operation.RootFolder(this.baseLocation);
-            string jsonPath = this.basePath + "\\wwwroot\\User\\trash.json";
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
+            this.operation.RootFolder(this.baseLocation + connectionId);
+            string jsonPath = this.basePath + "\\wwwroot\\VirtualConnections\\" + connectionId + "\\User\\trash.json";
             string jsonData = System.IO.File.ReadAllText(jsonPath);
             string responseString = "";
             List<TrashContents> DeletedFiles = JsonConvert.DeserializeObject<List<TrashContents>>(jsonData) ?? new List<TrashContents>();
@@ -164,7 +202,7 @@ namespace DocumentExplorer.Controllers
                 FileManagerResponse response = this.operation.Move(trashPath, fileLocation, new string[] { trashFile.Name }, new string[] { trashFile.Name }, null, null);
                 if ((response.Error == null))
                 {
-                    DeleteDirectory(this.baseLocation + trashPath);
+                    DeleteDirectory(this.baseLocation + connectionId + trashPath);
                     DeletedFiles.Remove(trashFile);
                     responseString = "Restored";
                 }
@@ -180,8 +218,15 @@ namespace DocumentExplorer.Controllers
 
         public FileManagerResponse SearchFiles(string value, bool caseSensitive)
         {
-            this.operation.RootFolder(this.baseLocation);
-            string jsonPath = this.basePath + "\\wwwroot\\User\\trash.json";
+            string connectionId = HttpContext.Session.GetString("ConnectionId");
+
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                connectionId = Guid.NewGuid().ToString(); // Generate a new unique identifier
+                HttpContext.Session.SetString("ConnectionId", connectionId); // Store it in session
+            }
+            this.operation.RootFolder(this.baseLocation + connectionId);
+            string jsonPath = this.basePath + "\\wwwroot\\VirtualConnections\\" + connectionId + "\\User\\trash.json";
             string jsonData = System.IO.File.ReadAllText(jsonPath);
             List<TrashContents> DeletedFiles = JsonConvert.DeserializeObject<List<TrashContents>>(jsonData) ?? new List<TrashContents>();
             List<TrashContents> searchFiles = DeletedFiles.FindAll(x => new Regex(WildcardToRegex(value), (caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase)).IsMatch(x.Name));
