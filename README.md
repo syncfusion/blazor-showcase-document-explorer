@@ -15,7 +15,7 @@ The samples requires the below requirements to run.
 
 * Clone this repository.
 * Open the command prompt from Application root directory.
-* Run the demo using `dotnet run --project server-side/DocumentExplorer.csproj` command.
+* Run the demo using `dotnet run` command.
 
 ## Demo
 
