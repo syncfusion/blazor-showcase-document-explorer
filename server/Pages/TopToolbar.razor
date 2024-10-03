@@ -1,0 +1,37 @@
+﻿@*@page "/topToolbar"*@
+
+@using Syncfusion.Blazor.Navigations
+
+<SfToolbar Height="50px" CssClass="e-zipToolbar">
+    <ToolbarItems>
+        <Syncfusion.Blazor.Navigations.ToolbarItem TooltipText="Back" Align="@ItemAlign.Left" CssClass="e-zip-back-btn" OnClick="CallBackClick">
+            <Template>
+                <span class="e-icons e-FM-back"></span>
+            </Template>
+        </Syncfusion.Blazor.Navigations.ToolbarItem>
+        <Syncfusion.Blazor.Navigations.ToolbarItem Align="@ItemAlign.Left">
+            <Template>
+                <div class="e-top-title">@RootName</div>
+            </Template>
+        </Syncfusion.Blazor.Navigations.ToolbarItem>
+        <Syncfusion.Blazor.Navigations.ToolbarItem TooltipText="Close" Align="@ItemAlign.Right" CssClass="e-zip-close-btn" OnClick="CallBackClick">
+            <Template>
+                <span class="e-icons e-FM-close"></span>
+            </Template>
+        </Syncfusion.Blazor.Navigations.ToolbarItem>
+    </ToolbarItems>
+</SfToolbar>
+
+
+
+@code {
+    public string RootName { get; set; }
+
+    private async void CallBackClick()
+    {
+        await BackClick.InvokeAsync("Back");
+    }
+
+    [Parameter]
+    public EventCallback<string> BackClick { get; set; }
+}

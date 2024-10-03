@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>DocumentExplorer</RootNamespace>
+    <Configurations>Debug;Release;Publish</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;Publish</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Components\Layout\**" />
+    <Compile Remove="Components\Pages\**" />
+    <Compile Remove="DocumentExplorer\**" />
+    <Content Remove="Components\Layout\**" />
+    <Content Remove="Components\Pages\**" />
+    <Content Remove="DocumentExplorer\**" />
+    <EmbeddedResource Remove="Components\Layout\**" />
+    <EmbeddedResource Remove="Components\Pages\**" />
+    <EmbeddedResource Remove="DocumentExplorer\**" />
+    <None Remove="Components\Layout\**" />
+    <None Remove="Components\Pages\**" />
+    <None Remove="DocumentExplorer\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Syncfusion.Blazor.ImageEditor" Version="*" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="*" />
+    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="*" />
+    <PackageReference Include="Syncfusion.Blazor.FileManager" Version="*" />
+    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="*" />
+    <PackageReference Include="Syncfusion.Blazor.Popups" Version="*" />
+    <PackageReference Include="Syncfusion.Blazor.PdfViewerServer.Windows" Version="*" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="*" />
+    <PackageReference Include="Syncfusion.Blazor.WordProcessor" Version="*" />
+    <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="*" />
+    <PackageReference Include="Syncfusion.Licensing" Version="*" />
+    <PackageReference Include="Syncfusion.PresentationRenderer.Net.Core" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="web.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="SyncfusionLicense.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,622 @@
+@page "/"
+
+@using Syncfusion.Blazor.FileManager
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Popups
+@using System.Text
+
+<div class="loading_indicator @OverlayStyle">
+    <div class="e-de-spinner-pane">
+    </div>
+    <div class="e-de-spinner-inner">
+        <svg class="e-de-spin-bootstrap4" viewBox="0 0 36 36">
+            <path class="e-de-path-circle" d="M18,1.8A16.2,16.2 0 1 1 1.8,18"></path>
+        </svg>
+    </div>
+</div>
+<div class="control-section">
+    <div id="fullLayout" class="e-full-layout">
+        @*Header Section*@
+        <div id="LayoutHeader" class="e-Header">
+            <SfToolbar Height="54px" CssClass="e-HeaderToolbar">
+                <ToolbarItems>
+                    <ToolbarItem TooltipText="Menu" Align="@ItemAlign.Left" CssClass="e-hamburger" OnClick="HamburgerClick">
+                        <Template>
+                            <span class="e-icons e-hamburger-icon"></span>
+                        </Template>
+                    </ToolbarItem>
+                    <ToolbarItem TooltipText="Menu" Align="@ItemAlign.Left" CssClass="e-logo">
+                        <Template>
+                            <span class="e-folder-logo e-header-icon"></span>
+                        </Template>
+                    </ToolbarItem>
+                    <ToolbarItem Align="@ItemAlign.Left">
+                        <Template>
+                            <div class="e-header-title">Document Explorer</div>
+                        </Template>
+                    </ToolbarItem>
+                    <ToolbarItem Align="@ItemAlign.Right" Id="User" OnClick="ToolbarClick" CssClass="@(_popupVisibility == "e-hide-popup" ? "e-user-icon" : "e-user-icon select-highlight")">
+                        <Template>
+                            <span id="User-Img" class='e-user-img e-avatar e-avatar-circle'> </span>
+                        </Template>
+                    </ToolbarItem>
+                    <ToolbarItem Align="@ItemAlign.Right" Id="GitHub" TooltipText="https://github.com/syncfusion/blazor-showcase-document-explorer" OnClick="ToolbarClick">
+                        <Template>
+                            <span class='sf-icon-Github'></span>
+                        </Template>
+                    </ToolbarItem>
+                </ToolbarItems>
+            </SfToolbar>
+        </div>
+        @*Content section*@
+        <div id="LayoutContent" class="e-mainLayout-content">
+            @*sidebar content*@
+            <SfSidebar @ref="_sidebar" Animate="false" @bind-IsOpen="SidebarToggle" Target=".e-mainLayout-content" MediaQuery="(min-width: 600px)" Width="260px" Type=SidebarType.Over EnableGestures="false"
+                       OnClose="SidebarClose" OnOpen="SidebarOpen">
+                <ChildContent>
+                    @*user icon for resolution < 600px*@
+                    <div class="e-card e-side-card">
+                        <div class="e-card-header">
+                            <div id="User-Img" class="e-user-img e-avatar e-avatar-circle"> </div>
+                            <div class="e-card-header-caption e-user-name">
+                                <div class="e-card-header-title"> Angellina</div>
+                                <div class="e-card-sub-title"><a href="">Change Picture</a></div>
+                            </div>
+                        </div>
+                    </div>
+                    @*new folder button for resolution > 600px*@
+                    <div id="LeftButtonContainer" class="e-left-button-contain">
+                        <SfButton CssClass="e-new-button" IconCss="e-icons e-add-new" Content="New Folder" IsPrimary="true" OnClick="NewClick"></SfButton>
+                    </div>
+                    @*sidebar options*@
+                    <div id="LeftTreeContainer" class="e-left-tree-contain">
+                        <SfTreeView @ref="_treeObj" CssClass="e-left-tree" TValue="OptionsDataModel" SelectedNodes="@_selectedTreeItem">
+                            <TreeViewFieldsSettings Id="Id" TValue="OptionsDataModel" DataSource=@_optionsData IconCss="Icon" Selected="Select" Text="Name"></TreeViewFieldsSettings>
+                            <TreeViewEvents TValue="OptionsDataModel" NodeSelected="TreeSelect"></TreeViewEvents>
+                        </SfTreeView>
+                        @*Storage details*@
+                        <div class="e-storage-container" title="Storage status">
+                            <div class="e-storage-header">
+                                <div class="e-storage-icon sf-icon-Storage"></div>
+                                <div class="e-storage-title">Storage </div>
+                            </div>
+                            <div class="e-storage-content">
+                                <div class="e-storage-progress progress">
+                                    <div class="progress-bar" style="width:@_storageRatio">
+                                    </div>
+                                </div>
+                                <div class="e-storage-value">@_storageValue</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @*user options for resolution < 600px*@
+                    <div class="e-card e-side-card e-side-bottom-card">
+                        <div class="e-card-content"><a class="e-empty-link" href="">My Profile</a></div>
+                        <div class="e-card-content"><a class="e-empty-link" href="">Settings</a></div>
+                        <div class="e-card-content"><a class="e-empty-link" href="">Sign Out</a></div>
+                    </div>
+                </ChildContent>
+            </SfSidebar>
+            <div id="RightLayout" class="e-right-layout">
+                @*file manager*@
+                <SfFileManager @ref="_fileManager" TValue="FileManagerDirectoryContent" Height="100%" ShowThumbnail="@(Field!="Trash")" PopupTarget="BODY" ShowTooltip =false>
+                    <FileManagerAjaxSettings Url=@(NavigationManager.BaseUri + "api/"+ (Field=="Shared"?"SharedFiles":(Field=="Trash"?"Trash":"FileManager"))+"/FileOperations")
+                                             GetImageUrl=@(NavigationManager.BaseUri + "api/"+(Field=="Shared"?"SharedFiles":(Field=="Trash"?"Trash":"FileManager"))+"/GetImage")
+                                             DownloadUrl=@(NavigationManager.BaseUri + "api/"+(Field=="Shared"?"SharedFiles":(Field=="Trash"?"Trash":"FileManager"))+"/Download")
+                                             UploadUrl=@(NavigationManager.BaseUri + "api/"+(Field=="Shared"?"SharedFiles":(Field=="Trash"?"Trash":"FileManager"))+"/Upload")>
+                    </FileManagerAjaxSettings>
+                    <FileManagerToolbarSettings Items="@_toolItems"></FileManagerToolbarSettings>
+                    <FileManagerContextMenuSettings File="@_fileMenu" Folder="@_folderMenu" Layout="@_layoutMenu"></FileManagerContextMenuSettings>
+                    <FileManagerNavigationPaneSettings Visible="false"></FileManagerNavigationPaneSettings>
+                    <FileManagerEvents OnSend="BeforeSend" TValue="FileManagerDirectoryContent" ToolbarItemClicked="UploadClick" ToolbarCreated="ToolbarCreate" MenuOpened="MenuOpen" OnMenuClick="MenuClick"
+                                       OnFileOpen="FileOpen" OnFileLoad="FileLoad" BeforePopupOpen="PopupBefore" BeforeImageLoad="ImageLoadBefore" PopupClosed="PopupClosed"></FileManagerEvents>
+                </SfFileManager>
+                <div id="file-overlay" class="e-file-overlay @_fileOverlayDisplay"></div>
+            </div>
+        </div>
+    </div>
+    @*popup containing user options like profile, sign out/in*@
+    <div id="user-Popup" class="e-notch e-icons e-user-Popup @_popupVisibility">
+        <div tabindex="0" class="e-card">
+            <div class="e-card-header">
+                <div id="User-Img" class="e-user-img e-avatar e-avatar-circle"> </div>
+                <div class="e-card-header-caption e-user-name">
+                    <div class="e-card-header-title"> Angellina</div>
+                    <div class="e-card-sub-title"><a href="">Change Picture</a></div>
+                </div>
+            </div>
+            <div class="e-card-content">
+                <div class="e-storage-progress progress">
+                    <div class="progress-bar" style="width:@_storageRatio">
+                    </div>
+                </div>
+                <div class="e-storage-value">@_storageValue</div>
+            </div>
+            <div class="e-card-content"><a class="e-empty-link" href="">My Profile</a></div>
+            <div class="e-card-content"><a class="e-empty-link" href="">Settings</a></div>
+            <div class="e-card-content"><a class="e-empty-link" href="">Sign Out</a></div>
+        </div>
+    </div>
+    <SfDialog Width="335px" @ref="_dialog" Target="#target" IsModal="true" @bind-Visible="_isUnSupported">
+        <DialogTemplates>
+            <Header>@_fileName</Header>
+            <Content>
+                <p>This type of file cannot be previewed.</p>
+            </Content>
+        </DialogTemplates>
+        <DialogEvents Closed="@DlgClose"></DialogEvents>
+        <DialogButtons>
+            <DialogButton Content="OK" IsPrimary="true" OnClick="@DlgButtonClick" />
+        </DialogButtons>
+        <DialogAnimationSettings Effect="@DialogEffect.None"></DialogAnimationSettings>
+    </SfDialog>
+
+</div>
+@code {
+    public string _currentImageUrl { get; set; }
+    public string _imageFileName { get; set; }
+    private SfFileManager<FileManagerDirectoryContent> _fileManager;
+    private SfTreeView<OptionsDataModel> _treeObj;
+    private SfSidebar _sidebar;
+    private SfDialog _dialog;
+    public bool SidebarToggle = false;
+    private bool ShowThumbnail = true;
+    private bool _isThumbNailChange = false;
+    private string[] _selectedTreeItem = new string[] { "1" };
+    private int _dialogCount = 0;
+    private string _popupVisibility = "e-hide-popup";
+    private string _fileOverlayDisplay = "e-file-hide-overlay";
+    private string _storageRatio = "70%";
+    private string _storageValue = "70% storage used";
+    private string SelectedFilename { get; set; }
+    private string SelectedPath { get; set; }
+    private string FileManagerId { get; set; }
+    private string MenuTargetData { get; set; }
+    private string MenuTargetId { get; set; }
+    private bool _isUnSupported = false;
+    private string OverlayStyle { get; set; } = "overlayShow";
+    private string _fileName = "";
+
+    private List<OptionsDataModel> _optionsData = new List<OptionsDataModel>() {
+        new OptionsDataModel(){Name= "All Files", Id= "1", Select= true, Icon= "sf-icon-Allfiles"},
+        new OptionsDataModel(){Name= "Recent Files", Id= "2", Select= false, Icon= "sf-icon-RecentFiles" },
+        new OptionsDataModel(){Name= "Shared With Me", Select= false, Id= "3", Icon= "e-icons e-shared" },
+        new OptionsDataModel(){Name= "Trash", Select= false, Id= "4", Icon= "sf-icon-Delete" },
+        new OptionsDataModel(){Name= "About", Select= false, Id= "5", Icon= "sf-icon-About" }
+    };
+    private class OptionsDataModel
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public bool Select { get; set; }
+        public string Icon { get; set; }
+    }
+    private string Field { get; set; } = null;
+    private string Path { get; set; }
+    //private string[] SelectedItems { get; set; }
+    private bool _treeSelectFlag = false;
+    private string _treeNode = "1";
+    private string[] _toolItems = new string[] {
+                   #if !Publish
+                    "Upload",
+                   #endif
+        "Delete", "Download", "Rename", "SortBy", "Refresh", "Selection", "View", "Details" };
+    private string[] _fileMenu = new string[] { "Open", "|", "Delete", "Download",  "Rename", "|", "Details" };
+    private string[] _folderMenu = new string[] { "Open", "|", "Delete", "Download", "Rename", "|", "Details" };
+    private string[] _layoutMenu = new string[] { "SortBy", "View", "Refresh", "|", "NewFolder",
+                    #if !Publish
+                    "Upload",
+                    #endif
+                    "|", "Details", "SelectAll" };
+    private bool isImageOpen = false;
+
+    protected override void OnInitialized()
+    {
+        _fileOverlayDisplay = "e-file-show-overlay";
+        Path = "/";
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("path", out var pathparam))
+        {
+            string tempPath = pathparam.First();
+            if (tempPath.StartsWith("Files"))
+            {
+                tempPath = tempPath.Replace("Files", "");
+            }
+            else
+            {
+                if (tempPath.StartsWith("SharedFiles"))
+                {
+                    tempPath = tempPath.Replace("SharedFiles", "");
+                }
+            }
+            SelectedPath = tempPath;
+            Path = SelectedPath;
+        }
+        if (QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("preview", out var param))
+        {
+            SelectedFilename = param.First();
+        }
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        OverlayStyle = "overlayHide";
+        if (!firstRender)
+        {
+            if (_fileManager.EnableRtl && SelectedPath != null & SelectedFilename != null)
+            {
+                SelectedPath = SelectedFilename = null;
+                _fileOverlayDisplay = "e-file-hide-overlay";
+            }
+        }
+    }
+    private void DlgButtonClick()
+    {
+        _isUnSupported = false;
+    }
+    private void DlgClose(Object args)
+    {
+        _isUnSupported = false;
+    }
+    public async void Refresh()
+    {
+        await _fileManager.RefreshFilesAsync();
+    }
+    private async void TreeSelect(NodeSelectEventArgs args)
+    {
+        _selectedTreeItem[0] = _treeNode = args.NodeData.Id;
+        //To avoid file refreshing if the selection change involves shared Trash as showThumbNail change triggers which refreshFiles.
+        _isThumbNailChange = (_treeNode == "5") || (args.NodeData.Id == "5");
+        ShowThumbnail = args.NodeData.Id != "5";
+        //To avoid manual refreshing if the selection change involves shared files/Trash as ajax setting change triggered which refresh.
+        bool flag = false;
+        if (_treeSelectFlag) { _treeSelectFlag = false; return; }
+        switch (_treeNode)
+        {
+            //Recent Files
+            case "2":
+                _toolItems = new string[] { "Download", "Rename", "SortBy", "Refresh", "Selection", "View", "Details" };
+                _fileMenu = new string[] { "Open", "|", "Delete", "Download",  "Rename", "|", "Details" };
+                _folderMenu = new string[] { "Open", "|", "Delete", "Download", "Rename", "|", "Details" };
+                _layoutMenu = new string[] { "SortBy", "View", "Refresh", "|", "NewFolder",
+                    #if !Publish
+                    "Upload",
+                    #endif
+                    "|", "Details", "SelectAll" };
+                Field = "Recent";
+                break;
+            //Shared With Me
+            case "3":
+                _toolItems = new string[] { "Download", "SortBy", "Refresh", "Selection", "View", "Details" };
+                _fileMenu = new string[] { "Open", "|", "Download", "|", "Details" };
+                _folderMenu = new string[] { "Open", "|", "Download", "|", "Details" };
+                _layoutMenu = new string[] { "SortBy", "|", "View", "|", "Refresh", "|", "Details", "|", "SelectAll" };
+                Field = "Shared";
+                break;
+            //Trash
+            case "4":
+                _toolItems = new string[] { "Delete", "SortBy", "Refresh", "Selection", "View", "Details" };
+                _fileMenu = new string[] { "Delete", "|", "Details", "|", "Restore", "EmptyTrash", "|", "SelectAll" };
+                _folderMenu = new string[] { "Download", "|", "Details", "|", "Restore", "EmptyTrash", "|", "SelectAll" };
+                _layoutMenu = new string[] { "SortBy", "View", "Refresh", "|", "Details", "SelectAll", "|", "Restore", "EmptyTrash" };
+                Field = "Trash";
+                break;
+            //About page
+            case "5":
+                NavigationManager.NavigateTo(NavigationManager.BaseUri + "about");
+                break;
+            //All Files
+            default:
+                _toolItems = new string[] {
+                    #if !Publish
+                    "Upload",
+                    #endif
+                    "Delete", "Download", "Rename", "SortBy", "Refresh", "Selection", "View", "Details" };
+                _fileMenu = new string[] { "Open", "|", "Delete", "Download",  "Rename", "|", "Details" };
+                _folderMenu = new string[] { "Open", "|", "Delete", "Download", "Rename", "|", "Details" };
+                _layoutMenu = new string[] { "SortBy", "View", "Refresh", "|", "NewFolder",
+                #if !Publish
+                "Upload",
+                #endif
+                "|", "Details", "SelectAll" };
+                Field = "AllFiles";
+                break;
+        }
+        if (!flag)
+        {
+            //Reset the path to make the filter work from route path
+            Path = "/";
+            _fileManager.Path = "/";
+            await _fileManager.RefreshFilesAsync();
+        }
+    }
+    private void BeforeSend(BeforeSendEventArgs args)
+    {
+        if (_isThumbNailChange)
+        {
+            _isThumbNailChange = false;
+        }
+
+        if (args.Action != "Upload")
+        {
+            if (args.HttpClientInstance.DefaultRequestHeaders.Contains("RootType"))
+            {
+                args.HttpClientInstance.DefaultRequestHeaders.Remove("RootType");
+            }
+            //Pass the user token through FileManager HTTP client instance.
+            args.HttpClientInstance.DefaultRequestHeaders.Add("RootType", Field);
+        }
+    }
+    private async Task UploadClick(ToolbarClickEventArgs<FileManagerDirectoryContent> args)
+    {
+        if (args.Item.Text == "Upload" && (!args.Cancel))
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "This is an security purpose alert message.");
+        }
+    }
+    private void HamburgerClick()
+    {
+        SidebarToggle = !SidebarToggle;
+    }
+    private void ToolbarClick(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        switch (args.Item.Id)
+        {
+            case "User":
+                _popupVisibility = _popupVisibility == "e-hide-popup" ? "e-show-popup" : "e-hide-popup";
+                break;
+            case "GitHub":
+                NavigationManager.NavigateTo("https://github.com/syncfusion/blazor-showcase-document-explorer");
+                break;
+        }
+    }
+    private async void NewClick()
+    {
+        await _fileManager.CreateFolderAsync();
+    }
+    private void SidebarOpen()
+    {
+        _popupVisibility = "e-hide-popup";
+        _fileOverlayDisplay = "e-file-show-overlay";
+    }
+    private void SidebarClose()
+    {
+        _popupVisibility = "e-hide-popup";
+        _fileOverlayDisplay = "e-file-hide-overlay";
+    }
+    private void PopupBefore(BeforePopupOpenCloseEventArgs args)
+    {
+        if (args.PopupName == "Image Preview")
+        {
+            args.Cancel = true;
+        }
+        else
+        {
+            _dialogCount++;
+            _popupVisibility = "e-hide-popup";
+        }
+    }
+    private void ImageLoadBefore(BeforeImageLoadEventArgs<FileManagerDirectoryContent> args)
+    {
+        if (isImageOpen)
+        {
+            string uri = NavigationManager.BaseUri;
+            _currentImageUrl = args.ImageUrl;
+            _imageFileName = args.FileDetails.Name;
+            Dictionary<string, string> imageUrl = new Dictionary<string, string> { { "imageUrl", _currentImageUrl }, { "fileName", _imageFileName } };
+            NavigationManager.NavigateTo(QueryHelpers.AddQueryString(uri + "image-viewer/", imageUrl));
+            isImageOpen = false;
+        }
+    }
+    private async void PopupOpened(PopupOpenCloseEventArgs args)
+    {
+        // await JSRuntime.InvokeVoidAsync("setDialogDrag", args.Element.ID);
+    }
+    private void PopupClosed()
+    {
+        _dialogCount--;
+    }
+    private async void MenuOpen(MenuOpenEventArgs<FileManagerDirectoryContent> args)
+    {
+
+        if ((Field != "Shared") && (Field != "Trash"))
+        {
+            MenuTargetData = JsonConvert.SerializeObject(args.FileDetails);
+        }
+        else if (Field == "Trash" && !args.IsSubMenu)
+        {
+            foreach (Syncfusion.Blazor.FileManager.MenuItemModel menu in args.Items)
+            {
+                switch (menu.Text)
+                {
+                    case "Restore":
+                        menu.IconCss = "e-icons e-restore";
+                        break;
+                    case "EmptyTrash":
+                        menu.IconCss = "sf-icon-Delete";
+                        menu.Text = "Delete Permanently";
+                        break;
+                }
+            }
+        }
+    }
+    private async void MenuClick(MenuClickEventArgs<FileManagerDirectoryContent> args)
+    {
+        if (args.Item.Id == _fileManager.ID + "_cm_restore")
+        {
+            List<Syncfusion.Blazor.FileManager.FileManagerDirectoryContent> files = _fileManager.GetSelectedFiles();
+            if (files.Count != 0) { Restore(args.FileDetails); }
+        }
+        if (args.Item.Id == _fileManager.ID + "_cm_restoreall")
+        {
+            EmptyTrash();
+        }
+    }
+    private void ToolbarCreate(ToolbarCreateEventArgs args)
+    {
+        List<Syncfusion.Blazor.FileManager.ToolBarItemModel> items = args.Items;
+        foreach (Syncfusion.Blazor.FileManager.ToolBarItemModel item in items)
+        {
+            if (item.Id == _fileManager.ID + "_tb_newfolder") { item.CssClass = "e-FM-newfolder"; }
+
+#if !Publish
+            if (item.Id == _fileManager.ID + "_tb_upload") { item.CssClass = "e-FM-upload"; }
+
+#endif
+        }
+    }
+
+    private async void FileOpen(FileOpenEventArgs<FileManagerDirectoryContent> args)
+    {
+        if (args.FileDetails.Type == ".jpg" || args.FileDetails.Type == ".png" || args.FileDetails.Type == ".dib" || args.FileDetails.Type == ".jpeg"
+        || args.FileDetails.Type == ".jpe" || args.FileDetails.Type == ".jfif" || args.FileDetails.Type == ".gif" || args.FileDetails.Type == ".tif"
+        || args.FileDetails.Type == ".tiff" || args.FileDetails.Type == ".ico")
+            isImageOpen = true;
+        if (Field == "Trash") { args.Cancel = true; return; }
+        string dataString = JsonConvert.SerializeObject(args.FileDetails);
+        Dictionary<string, dynamic> fileDetails = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(dataString);
+        if (fileDetails["IsFile"])
+        {
+            string filePath = (Field == "Shared" ? "SharedFiles" : "Files") + (fileDetails["FilterPath"]);
+            Dictionary<string, string> query = new Dictionary<string, string> { { "preview", fileDetails["Name"] }, { "path", filePath } };
+            Dictionary<string, string> imageUrl = new Dictionary<string, string> { { "imageUrl", _currentImageUrl } };
+            string uri = NavigationManager.BaseUri;
+            switch (fileDetails["Type"])
+            {
+                case Constants.Zip:
+                    NavigationManager.NavigateTo(QueryHelpers.AddQueryString(uri + "zip-viewer/", query));
+                    break;
+                case Constants.Pptx:
+                    NavigationManager.NavigateTo(QueryHelpers.AddQueryString(uri + "presentation-viewer/", query));
+                    break;
+                case Constants.Pdf:
+                    NavigationManager.NavigateTo(QueryHelpers.AddQueryString(uri + "pdf-viewer/", query));
+                    break;
+                case Constants.Docx:
+                case Constants.Doc:
+                case Constants.Rtf:
+                case Constants.Txt:
+                    NavigationManager.NavigateTo(QueryHelpers.AddQueryString(uri + "word-viewer/", query));
+                    break;
+                case Constants.Dib:
+                case Constants.Jpg:
+                case Constants.Jpeg:
+                case Constants.Jpe:
+                case Constants.Jfif:
+                case Constants.Gif:
+                case Constants.Tif:
+                case Constants.Tiff:
+                case Constants.Png:
+                case Constants.Ico:
+
+                    break;
+                default:
+                    _fileName = fileDetails["Name"];
+                    _isUnSupported = true;
+                    break;
+            }
+        }
+        else
+        {
+            if ((_treeNode != "1") && (_treeNode != "3"))
+            {
+                _treeSelectFlag = true;
+                _selectedTreeItem = new string[] { "1" };
+                args.Cancel = true;
+            }
+            string newPath = (fileDetails["FilterPath"] + fileDetails["Name"] + "/");
+            Path = newPath.Replace('\\', '/');
+            await _fileManager.RefreshFilesAsync();
+        }
+    }
+    private async void FileLoad(FileLoadEventArgs<FileManagerDirectoryContent> args)
+    {
+        string dataString = JsonConvert.SerializeObject(args.FileDetails);
+        Dictionary<string, dynamic> fileDetails = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(dataString);
+        //Check the module name and type of the file to set Preview
+        if (args.Module == "LargeIconsView" && (Field != "Trash") && (fileDetails["type"] == Constants.Pptx || fileDetails["type"] == Constants.Docx
+    || fileDetails["type"] == Constants.Doc || fileDetails["type"] == Constants.Rtf || fileDetails["type"] == Constants.Txt || fileDetails["type"] == Constants.Pdf))
+        {
+            string url = GetImageUrl(fileDetails);
+            @* DOM ele = args.Element; *@
+            @* string val = Convert.ToString((await ele.GetAttribute<string>("data-uid")));
+            await ele.AddClass(new string[] { "e-file-preview-image" }); *@
+            @* await JSRuntime.InvokeVoidAsync("setSpinnerPreview", val); *@
+            string anm = fileDetails["name"];
+            string previewImage = await JSRuntime.InvokeAsync<string>("getLocalCacheImage", anm);
+            if (previewImage != null)
+            {
+                @* await JSRuntime.InvokeVoidAsync("setPreview", val, previewImage); *@
+            }
+            else
+            {
+                HttpRequestMessage docrequest = new HttpRequestMessage(HttpMethod.Post, NavigationManager.BaseUri + "api/Preview/GetPreview");
+                docrequest.Content = new StringContent(JsonConvert.SerializeObject(new { Path = (fileDetails["filterPath"] + fileDetails["name"]) }), Encoding.UTF8, "application/json");
+                HttpResponseMessage docresponse = await Http.SendAsync(docrequest);
+                if (docresponse.IsSuccessStatusCode)
+                {
+                    string output = await docresponse.Content.ReadAsStringAsync();
+                    if (output != "Error")
+                    {
+                        string name = fileDetails["name"];
+                        await JSRuntime.InvokeVoidAsync("setLocalCacheImage", name, output);
+                        @* await JSRuntime.InvokeVoidAsync("setPreview", val, output); *@
+                    }
+                    else
+                    {
+                        //revertToIconPreview
+                        var iconCss = "";
+                        switch (fileDetails["type"])
+                        {
+                            case Constants.Docx:
+                                iconCss = "e-fe-docx";
+                                break;
+                            case Constants.Doc:
+                                iconCss = "e-fe-doc";
+                                break;
+                            case Constants.Rtf:
+                                iconCss = "e-fe-rtf";
+                                break;
+                            case Constants.Pdf:
+                                iconCss = "e-fe-pdf";
+                                break;
+                            case Constants.Pptx:
+                                iconCss = "e-fe-pptx";
+                                break;
+                        }
+                        @* await JSRuntime.InvokeVoidAsync("revertToIconPreview", val, iconCss); *@
+                    }
+                }
+            }
+        }
+    }
+    private async void Restore(object files)
+    {
+        string url = NavigationManager.BaseUri + "api/Trash/Restore";
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Content = new StringContent(JsonConvert.SerializeObject(files), Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            await _fileManager.ClearSelectionAsync();
+            await _fileManager.RefreshFilesAsync();
+        }
+    }
+    private async void EmptyTrash()
+    {
+        string url = NavigationManager.BaseUri + "api/Trash/EmptyTrash";
+        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+        HttpResponseMessage response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            await _fileManager.ClearSelectionAsync();
+            await _fileManager.RefreshFilesAsync();
+        }
+    }
+    private string GetImageUrl(Dictionary<string, dynamic> data)
+    {
+        //Specify your controller action name
+        string baseUrl = "/api/FileManager/GetPreviewImage";
+        string imgUrl = baseUrl + "?path=" + data["filterPath"] + data["name"];
+        return imgUrl;
+    }
+}
