@@ -1,6 +1,6 @@
-# Essential Studio for Blazor - Document Explorer
+# Essential&reg; Studio for Blazor - Document Explorer
 
-This document explorer demo application showcases several Syncfusion Blazor UI components together in a real-world application scenario. This demo manages the file system that allows users to perform most common file operations like accessing, editing, and sorting files or folders and also opens Word, RTF, Text, PowerPoint and PDF documents.
+This document explorer demo application showcases several Syncfusion&reg; Blazor UI components together in a real-world application scenario. This demo manages the file system that allows users to perform most common file operations like accessing, editing, and sorting files or folders and also opens Word, RTF, Text, PowerPoint and PDF documents.
 
 ## Deployment
 
