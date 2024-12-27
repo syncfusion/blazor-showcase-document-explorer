@@ -1,7 +1,6 @@
 @page "/pdf-viewer"
 
-@using Syncfusion.Blazor.PdfViewerServer
-@using Syncfusion.Blazor.PdfViewer
+@using Syncfusion.Blazor.SfPdfViewer
 
 <div class="zip-container" id="zipContainer">
     <div class="loading_indicator @OverlayStyle">
@@ -18,10 +17,10 @@
         <TopToolbar @ref="_topToolbar" BackClick="BackClickHandler"></TopToolbar>
     </div>
     <div class="file-viewer">
-        <SfPdfViewerServer @ref="_viewer" ID="PdfView"DocumentPath="@DocumentPath" Height="100%" Width="100%">
+        <SfPdfViewer2 @ref="_viewer" ID="PdfView" DocumentPath="@DocumentPath" Height="100%" Width="100%">
             <PdfViewerEvents DocumentLoaded="@OnDocumentLoaded" PageChanged="@OnPageChanged">
             </PdfViewerEvents>
-        </SfPdfViewerServer>
+        </SfPdfViewer2>
     </div>
 </div>
 
@@ -37,7 +36,7 @@
     private string ThumbnailStyle { get; set; } = "thumbnailShow";
     private string DeMarginStyle { get; set; } = "e-word-right-layout";
     private int Zoom { get; set; }
-    private SfPdfViewerServer _viewer;
+    private SfPdfViewer2 _viewer;
     private TopToolbar _topToolbar;
 
     protected override void OnInitialized()

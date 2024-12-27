@@ -11,7 +11,7 @@ using DocumentExplorer.Data;
 using DocIO = Syncfusion.DocIO.DLS;
 using Syncfusion.DocIORenderer;
 using Syncfusion.Pdf;
-using Syncfusion.Blazor.PdfViewer;
+using Syncfusion.Blazor.SfPdfViewer;
 using Syncfusion.Presentation;
 using Syncfusion.PresentationRenderer;
 using DocumentExplorer.Models;
@@ -54,28 +54,28 @@ namespace DocumentExplorer.Controllers
                 {
                     try
                     {
-                        FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
-                        PdfRenderer pdfExportImage = new PdfRenderer();
-                        //Loads the PDF document 
-                        pdfExportImage.Load(fileStream);
-                        //Exports the PDF document pages into images
-                       SkiaSharp.SKBitmap[] skBitmaps = pdfExportImage.ExportAsImage(0, 0);
-                    System.Drawing.Bitmap[] bitmapImages = new System.Drawing.Bitmap[skBitmaps.Length];
+                    //    FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+                    //    SfPdfViewer2 pdfExportImage = new SfPdfViewer2();
+                    //    //Loads the PDF document 
+                    //    pdfExportImage.LoadAsync(fileStream);
+                    //    //Exports the PDF document pages into images
+                    //   SkiaSharp.SKBitmap[] skBitmaps = pdfExportImage.ExportAsImage(0, 0);
+                    //System.Drawing.Bitmap[] bitmapImages = new System.Drawing.Bitmap[skBitmaps.Length];
 
-                    for (int i = 0; i < skBitmaps.Length; i++)
-                    {
-                        using (SKImage skImage = SKImage.FromBitmap(skBitmaps[i]))
-                        using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
-                        using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
-                        {
-                            bitmapImages[i] = new System.Drawing.Bitmap(stream);
-                        }
-                    }
-                    imageStream = new MemoryStream();
-                    bitmapImages[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
-                        imageStream.Position = 0;
-                        pdfExportImage.Dispose();
-                        fileStream.Close();
+                    //for (int i = 0; i < skBitmaps.Length; i++)
+                    //{
+                    //    using (SKImage skImage = SKImage.FromBitmap(skBitmaps[i]))
+                    //    using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
+                    //    using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
+                    //    {
+                    //        bitmapImages[i] = new System.Drawing.Bitmap(stream);
+                    //    }
+                    //}
+                    //imageStream = new MemoryStream();
+                    //bitmapImages[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
+                    //    imageStream.Position = 0;
+                    //    pdfExportImage.Dispose();
+                    //    fileStream.Close();
                     }
                     catch
                     {
@@ -86,46 +86,46 @@ namespace DocumentExplorer.Controllers
                 {
                     try
                     {
-                        FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
-                        //Loads file stream into Word document
-                        DocIO.WordDocument document = new DocIO.WordDocument(fileStream, GetDocIOFormatType(extension));
-                        fileStream.Dispose();
-                        //Instantiation of DocIORenderer for Word to PDF conversion
-                        DocIORenderer render = new DocIORenderer();
-                        //Converts Word document into PDF document
-                        PdfDocument pdfDocument = render.ConvertToPDF(document);
-                        //Releases all resources used by the Word document and DocIO Renderer objects
-                        render.Dispose();
-                        document.Dispose();
-                        //Saves the PDF file
-                        MemoryStream outputStream = new MemoryStream();
-                        pdfDocument.Save(outputStream);
-                        outputStream.Position = 0;
-                        //Closes the instance of PDF document object
-                        pdfDocument.Close();
+                        //FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+                        ////Loads file stream into Word document
+                        //DocIO.WordDocument document = new DocIO.WordDocument(fileStream, GetDocIOFormatType(extension));
+                        //fileStream.Dispose();
+                        ////Instantiation of DocIORenderer for Word to PDF conversion
+                        //DocIORenderer render = new DocIORenderer();
+                        ////Converts Word document into PDF document
+                        //PdfDocument pdfDocument = render.ConvertToPDF(document);
+                        ////Releases all resources used by the Word document and DocIO Renderer objects
+                        //render.Dispose();
+                        //document.Dispose();
+                        ////Saves the PDF file
+                        //MemoryStream outputStream = new MemoryStream();
+                        //pdfDocument.Save(outputStream);
+                        //outputStream.Position = 0;
+                        ////Closes the instance of PDF document object
+                        //pdfDocument.Close();
 
-                        PdfRenderer pdfExportImage = new PdfRenderer();
-                        //Loads the PDF document 
-                        pdfExportImage.Load(outputStream);
-                        //Exports the PDF document pages into images
-                        SKBitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, 0);
-                        Bitmap[] bitmapImages = new Bitmap[bitmapimage.Length];
+                        //SfPdfViewer2 pdfExportImage = new SfPdfViewer2();
+                        ////Loads the PDF document 
+                        //pdfExportImage.LoadAsync(outputStream);
+                        ////Exports the PDF document pages into images
+                        //SKBitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, 0);
+                        //Bitmap[] bitmapImages = new Bitmap[bitmapimage.Length];
 
-                        for (int i = 0; i < bitmapimage.Length; i++)
-                        {
-                            using (SKImage skImage = SKImage.FromBitmap(bitmapimage[i]))
-                            using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
-                            using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
-                            {
-                                bitmapImages[i] = new Bitmap(stream);
-                            }
-                        }
+                        //for (int i = 0; i < bitmapimage.Length; i++)
+                        //{
+                        //    using (SKImage skImage = SKImage.FromBitmap(bitmapimage[i]))
+                        //    using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
+                        //    using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
+                        //    {
+                        //        bitmapImages[i] = new Bitmap(stream);
+                        //    }
+                        //}
 
-                        imageStream = new MemoryStream();
-                        bitmapImages[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
-                        imageStream.Position = 0;
+                        //imageStream = new MemoryStream();
+                        //bitmapImages[0].Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
+                        //imageStream.Position = 0;
 
-                        fileStream.Close();
+                        //fileStream.Close();
                     }
                     catch
                     {
