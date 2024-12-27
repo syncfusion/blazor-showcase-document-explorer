@@ -536,7 +536,7 @@
         if (args.Module == "LargeIconsView" && (Field != "Trash") && (fileDetails["type"] == Constants.Pptx || fileDetails["type"] == Constants.Docx
     || fileDetails["type"] == Constants.Doc || fileDetails["type"] == Constants.Rtf || fileDetails["type"] == Constants.Txt || fileDetails["type"] == Constants.Pdf))
         {
-            string url = GetImageUrl(fileDetails);
+            //string url = GetImageUrl(fileDetails);
             @* DOM ele = args.Element; *@
             @* string val = Convert.ToString((await ele.GetAttribute<string>("data-uid")));
             await ele.AddClass(new string[] { "e-file-preview-image" }); *@
@@ -612,11 +612,11 @@
             await _fileManager.RefreshFilesAsync();
         }
     }
-    private string GetImageUrl(Dictionary<string, dynamic> data)
-    {
-        //Specify your controller action name
-        string baseUrl = "/api/FileManager/GetPreviewImage";
-        string imgUrl = baseUrl + "?path=" + data["filterPath"] + data["name"];
-        return imgUrl;
-    }
+    // private string GetImageUrl(Dictionary<string, dynamic> data)
+    // {
+    //     //Specify your controller action name
+    //     string baseUrl = "/api/FileManager/GetPreviewImage";
+    //     string imgUrl = baseUrl + "?path=" + data["filterPath"] + data["name"];
+    //     return imgUrl;
+    // }
 }

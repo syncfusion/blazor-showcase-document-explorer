@@ -36,7 +36,7 @@
     <PackageReference Include="Syncfusion.Blazor.FileManager" Version="*" />
     <PackageReference Include="Syncfusion.Blazor.Buttons" Version="*" />
     <PackageReference Include="Syncfusion.Blazor.Popups" Version="*" />
-    <PackageReference Include="Syncfusion.Blazor.PdfViewerServer.Windows" Version="*" />
+	<PackageReference Include="Syncfusion.Blazor.SfPdfViewer" Version="*" />
     <PackageReference Include="Syncfusion.Blazor.Themes" Version="*" />
     <PackageReference Include="Syncfusion.Blazor.WordProcessor" Version="*" />
     <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="*" />
@@ -44,7 +44,7 @@
     <PackageReference Include="Syncfusion.PresentationRenderer.Net.Core" Version="*" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
-    <PackageReference Include="System.Drawing.Common" Version="8.0.1" />
+	  <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
   </ItemGroup>
 
   <ItemGroup>

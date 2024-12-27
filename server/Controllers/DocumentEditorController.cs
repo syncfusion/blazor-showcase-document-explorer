@@ -10,7 +10,7 @@ using Syncfusion.Blazor.DocumentEditor;
 using DocIO = Syncfusion.DocIO.DLS;
 using Syncfusion.DocIORenderer;
 using Syncfusion.Pdf;
-using Syncfusion.Blazor.PdfViewer;
+using Syncfusion.Blazor.SfPdfViewer;
 using DocumentExplorer.Models;
 using SkiaSharp;
 using System.Text.Json;
@@ -45,47 +45,47 @@ namespace DocumentExplorer.Controllers
         }
         private List<string> ConvertToImages(FileStream fs, List<string> returnStrings, Syncfusion.DocIO.FormatType type)
         {
-            DocIO.WordDocument wd = new DocIO.WordDocument(fs, type);
-            //Instantiation of DocIORenderer for Word to PDF conversion
-            DocIORenderer render = new DocIORenderer();
-            //Converts Word document into PDF document
-            PdfDocument pdfDocument = render.ConvertToPDF(wd);
-            //Releases all resources used by the Word document and DocIO Renderer objects
-            render.Dispose();
-            wd.Dispose();
-            //Saves the PDF file
-            MemoryStream outputStream = new MemoryStream();
-            pdfDocument.Save(outputStream);
-            outputStream.Position = 0;
-            //Closes the instance of PDF document object
-            pdfDocument.Close();
+            //DocIO.WordDocument wd = new DocIO.WordDocument(fs, type);
+            ////Instantiation of DocIORenderer for Word to PDF conversion
+            //DocIORenderer render = new DocIORenderer();
+            ////Converts Word document into PDF document
+            //PdfDocument pdfDocument = render.ConvertToPDF(wd);
+            ////Releases all resources used by the Word document and DocIO Renderer objects
+            //render.Dispose();
+            //wd.Dispose();
+            ////Saves the PDF file
+            //MemoryStream outputStream = new MemoryStream();
+            //pdfDocument.Save(outputStream);
+            //outputStream.Position = 0;
+            ////Closes the instance of PDF document object
+            //pdfDocument.Close();
 
-            PdfRenderer pdfExportImage = new PdfRenderer();
-            //Loads the PDF document 
-            pdfExportImage.Load(outputStream);
+            //SfPdfViewer2 pdfExportImage = new SfPdfViewer2();
+            ////Loads the PDF document 
+            //pdfExportImage.LoadAsync(outputStream);
 
-            //Exports the PDF document pages into images
-            SKBitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, pdfExportImage.PageCount - 1);
-            Bitmap[] bitmapImages = new Bitmap[bitmapimage.Length];
+            ////Exports the PDF document pages into images
+            //SKBitmap[] bitmapimage = pdfExportImage.ExportAsImage(0, pdfExportImage.PageCount - 1);
+            //Bitmap[] bitmapImages = new Bitmap[bitmapimage.Length];
 
-            for (int i = 0; i < bitmapimage.Length; i++)
-            {
-                using (SKImage skImage = SKImage.FromBitmap(bitmapimage[i]))
-                using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
-                using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
-                {
-                    bitmapImages[i] = new Bitmap(stream);
-                }
-            }
+            //for (int i = 0; i < bitmapimage.Length; i++)
+            //{
+            //    using (SKImage skImage = SKImage.FromBitmap(bitmapimage[i]))
+            //    using (SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100))
+            //    using (System.IO.MemoryStream stream = new System.IO.MemoryStream(skData.ToArray()))
+            //    {
+            //        bitmapImages[i] = new Bitmap(stream);
+            //    }
+            //}
 
-            foreach (Bitmap bitmap in bitmapImages)
-            {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                    returnStrings.Add("data:image/png;base64," + Convert.ToBase64String(ms.ToArray()));
-                }
-            }
+            //foreach (Bitmap bitmap in bitmapImages)
+            //{
+            //    using (MemoryStream ms = new MemoryStream())
+            //    {
+            //        bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            //        returnStrings.Add("data:image/png;base64," + Convert.ToBase64String(ms.ToArray()));
+            //    }
+            //}
             return returnStrings;
         }
         [Route("OpenFromZip")]
