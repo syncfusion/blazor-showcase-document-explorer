@@ -1,13 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>DocumentExplorer</RootNamespace>
     <Configurations>Debug;Release;Publish</Configurations>
+	<Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>	
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;Publish</DefineConstants>
+    <DefineConstants>TRACE;Publish;Release</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -30,20 +33,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Syncfusion.Blazor.ImageEditor" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.Blazor.FileManager" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.Blazor.Popups" Version="32.1.19" />
-	<PackageReference Include="Syncfusion.Blazor.SfPdfViewer" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.Blazor.WordProcessor" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.Licensing" Version="32.1.19" />
-    <PackageReference Include="Syncfusion.PresentationRenderer.Net.Core" Version="32.1.19" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
+    <PackageReference Include="Syncfusion.Blazor.ImageEditor" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Blazor.FileManager" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Blazor.Popups" Version="33.1.44" />
+	<PackageReference Include="Syncfusion.Blazor.SfPdfViewer" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Blazor.WordProcessor" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Licensing" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.PresentationRenderer.Net.Core" Version="33.1.44" />
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
 	  <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.1" />
   </ItemGroup>
 
