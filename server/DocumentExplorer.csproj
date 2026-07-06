@@ -33,18 +33,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Syncfusion.Blazor.ImageEditor" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.Blazor.FileManager" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.Blazor.Popups" Version="33.1.44" />
-	<PackageReference Include="Syncfusion.Blazor.SfPdfViewer" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.Blazor.WordProcessor" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.Licensing" Version="33.1.44" />
-    <PackageReference Include="Syncfusion.PresentationRenderer.Net.Core" Version="33.1.44" />
+    <PackageReference Include="Syncfusion.Blazor.ImageEditor" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.Blazor.FileManager" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.Blazor.Buttons" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.Blazor.Popups" Version="34.1.29" />
+	<PackageReference Include="Syncfusion.Blazor.SfPdfViewer" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.Blazor.WordProcessor" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.Licensing" Version="34.1.29" />
+    <PackageReference Include="Syncfusion.PresentationRenderer.Net.Core" Version="34.1.29" />
 	<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
 	  <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.1" />

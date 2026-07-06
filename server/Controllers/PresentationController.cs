@@ -13,7 +13,6 @@ using Syncfusion.PresentationRenderer;
 namespace DocumentExplorer.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
     public class PresentationController : ControllerBase
     {
         private string basePath;
