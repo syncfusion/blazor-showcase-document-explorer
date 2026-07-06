@@ -18,7 +18,6 @@ using System.IO.Compression;
 namespace DocumentExplorer.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
     public class ZipViewerController : ControllerBase
     {
         private PhysicalFileProvider operation;        

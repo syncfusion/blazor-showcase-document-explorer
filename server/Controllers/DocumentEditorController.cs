@@ -18,7 +18,6 @@ using System.Text.Json;
 namespace DocumentExplorer.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
     public class DocumentEditorController : ControllerBase
     {
         private string basePath;

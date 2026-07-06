@@ -21,7 +21,6 @@ using Microsoft.AspNetCore.Http;
 namespace DocumentExplorer.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
     public class PreviewController : ControllerBase
     {
         private PhysicalFileProvider operation;
