@@ -56,6 +56,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// SEO: Add X-Robots-Tag header for search engine indexing
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Robots-Tag", "index, follow");
+    await next();
+});
+
 app.UseSession();
 app.MapStaticAssets();
 app.UseAntiforgery();
