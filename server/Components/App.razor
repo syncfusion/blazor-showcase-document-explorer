@@ -3,11 +3,47 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blazor Document Explorer Showcase example | Syncfusion Demos</title>
-    <meta name="description" content="The showcase for Blazor Document Explorer, allows users to manage the file system, perform common file operations, and opens Word, RTF & Power Point documents." />
+
+    <!-- Primary Meta Tags -->
+    <title>Blazor Document Explorer Demo | Syncfusion Showcase</title>
+    <meta name="title" content="Blazor Document Explorer Demo | Syncfusion Showcase" />
+    <meta name="description" content="Build an explorer-style document manager to browse and open Word, Excel, PDF, and image files in the appropriate Syncfusion Blazor viewer or editor." />
+    <meta name="author" content="Syncfusion Inc." />
+    <meta name="publisher" content="Syncfusion Inc." />
+
+    <!-- robots/googlebot: index/follow only when served from the canonical Syncfusion host -->
+    <script>
+        (function () {
+            try {
+                var canonicalHost = 'showcase.syncfusion.com';
+                var isCanonical = typeof window !== 'undefined'
+                    && window.location
+                    && window.location.hostname
+                    && window.location.hostname.toLowerCase().indexOf(canonicalHost) !== -1;
+                var content = isCanonical ? 'index, follow' : 'noindex, nofollow';
+                document.write(
+                    '<meta name="robots" content="' + content + '" />' +
+                    '<meta name="googlebot" content="' + content + '" />'
+                );
+            } catch (e) {
+                document.write(
+                    '<meta name="robots" content="noindex, nofollow" />' +
+                    '<meta name="googlebot" content="noindex, nofollow" />'
+                );
+            }
+        })();
+    </script>
+    <meta name="rating" content="General" />
+    <meta name="distribution" content="Global" />
+    <meta name="revisit-after" content="7 days" />
+    <meta name="language" content="English" />
+    <meta name="application-name" content="Document Explorer" />
+    <meta name="generator" content="Blazor" />
+
     <!-- Google Tag Manager -->
-    <!-- Load GTM-P3WXFWCW immediately on page load  -->
+    <!-- Load GTM-WXZ6DX9B immediately on page load  -->
     <script>
         (function (w, d, s, l, i) {
             w[l] = w[l] || []; w[l].push({
@@ -16,7 +52,7 @@
             }); var f = d.getElementsByTagName(s)[0],
                 j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
                     'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
-        })(window, document, 'script', 'dataLayer', 'GTM-P3WXFWCW');
+        })(window, document, 'script', 'dataLayer', 'GTM-WXZ6DX9B');
     </script>
     <!-- Load GTM-W8WD8WN on user interaction -->
     <script>
@@ -36,21 +72,107 @@
             events.forEach(event => document.addEventListener(event, loadGTM, { once: true }));
         });
     </script>
+
+    <!-- Canonical -->
     <base href="/" />
-    <link href="https://showcase.syncfusion.com/document-explorer/blazor/" rel="canonical" />
-    <meta property="og:title" content="Blazor Document Explorer Showcase example | Syncfusion Demos" />
-    <meta property="og:description" content="The showcase for Blazor Document Explorer, allows users to manage the file system, perform common file operations, and opens Word, RTF & Power Point documents." />
-    <meta property="og:url" content="https://showcase.syncfusion.com/document-explorer/blazor/" />
-    <meta property="og:image" content="@(Urihelper.BaseUri)Files/Pictures/Nature/bird.jpg" />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://showcase.syncfusion.com/document-explorer/blazor/" />
+
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Stylesheets -->
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
     <link rel="stylesheet" href="@Assets["css/bootstrap/bootstrap.min.css"]" />
     <ResourcePreloader />
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
     <link href="@Assets["css/site.css"]" rel="stylesheet" />
     <script src="@Assets["./Script/JsInteropHelper.js"]"></script>
-    <link href="@Assets["_content/Syncfusion.Blazor.Themes/fluent2.css"]" rel="stylesheet" />
+    <link href="@Assets["_content/Syncfusion.Blazor.Themes/bootstrap4.css"]" rel="stylesheet" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:site_name" content="Document Explorer - Syncfusion Blazor Showcase" />
+    <meta property="og:title" content="Blazor Document Explorer Demo | Syncfusion Showcase" />
+    <meta property="og:description" content="Build an explorer-style document manager to browse and open Word, Excel, PDF, and image files in the appropriate Syncfusion Blazor viewer or editor." />
+    <meta property="og:url" content="https://showcase.syncfusion.com/document-explorer/blazor/" />
+    <meta property="og:image" content="https://showcase.syncfusion.com/document-explorer/blazor/og-image.png" />
+    <meta property="og:image:secure_url" content="https://showcase.syncfusion.com/document-explorer/blazor/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Syncfusion Document Explorer - Blazor Components Showcase" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@@Syncfusion" />
+    <meta name="twitter:creator" content="@@Syncfusion" />
+    <meta name="twitter:title" content="Blazor Document Explorer Demo | Syncfusion Showcase" />
+    <meta name="twitter:description" content="Build an explorer-style document manager to browse and open Word, Excel, PDF, and image files in the appropriate Syncfusion Blazor viewer or editor." />
+    <meta name="twitter:image" content="https://showcase.syncfusion.com/document-explorer/blazor/og-image.png" />
+    <meta name="twitter:image:alt" content="Syncfusion Document Explorer - Blazor Components Showcase" />
+
+    <!-- Structured Data: WebApplication -->
+    <script type="application/ld+json">
+        {
+            "@@context": "https://schema.org",
+            "@@type": "WebApplication",
+            "name": "Document Explorer",
+            "alternateName": "Syncfusion Blazor Document Explorer",
+            "url": "https://showcase.syncfusion.com/document-explorer/blazor/",
+            "description": "Build an explorer-style document manager to browse and open Word, Excel, PDF, and image files in the appropriate Syncfusion Blazor viewer or editor.",
+            "applicationCategory": "BusinessApplication",
+            "publisher": {
+                "@@type": "Organization",
+                "name": "Syncfusion Inc.",
+                "url": "https://www.syncfusion.com/",
+                "logo": {
+                    "@@type": "ImageObject",
+                    "url": "https://www.syncfusion.com/content/images/syncfusion-logo.png"
+                }
+            },
+            "operatingSystem": "Any",
+            "browserRequirements": "Requires modern browser with JavaScript enabled",
+            "offers": {
+                "@@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "creator": {
+                "@@type": "Organization",
+                "name": "Syncfusion Inc.",
+                "url": "https://www.syncfusion.com/",
+                "logo": "https://www.syncfusion.com/content/images/syncfusion-logo.png",
+                "sameAs": [
+                    "https://twitter.com/Syncfusion",
+                    "https://github.com/syncfusion",
+                    "https://www.facebook.com/Syncfusion",
+                    "https://www.linkedin.com/company/syncfusion"
+                ]
+            }
+        }
+    </script>
+
+    <!-- Structured Data: BreadcrumbList -->
+    <script type="application/ld+json">
+        {
+            "@@context": "https://schema.org",
+            "@@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://showcase.syncfusion.com/document-explorer/blazor/"
+                },
+                {
+                    "@@type": "ListItem",
+                    "position": 2,
+                    "name": "Document Explorer"
+                }
+            ]
+        }
+    </script>
 
     <HeadOutlet @rendermode="InteractiveServer" />
 
@@ -60,7 +182,7 @@
     <!-- Google Tag Manager (noscript) -->
     <!--Page Load-->
     <noscript>
-        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P3WXFWCW" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WXZ6DX9B" height="0" width="0" style="display:none;visibility:hidden"></iframe>
     </noscript>
     <!--Interaction-->
     <noscript>
